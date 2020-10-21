@@ -7,6 +7,7 @@ import R from "ramda";
 import Promise from "bluebird";
 import {
     NoUuidError,
+    NoContentError,
     NotRetryableError,
     LinkNotFoundOnResource,
     AlreadyInStateError,
@@ -33,18 +34,17 @@ class IngestClient extends Client {
         const ingestUrl = `${connectionConfig.scheme}://${connectionConfig.host}:${connectionConfig.port}`;
         super(ingestUrl);
     }
-
+    
     retrieve(entityUrl: string) : Promise<any>{
         return new Promise((resolve, reject) => {
-            request({
+            const options = {
                 method: "GET",
                 url: entityUrl,
-                json: true
-            }).then(resp => {
-                resolve(resp);
-            }).catch(err => {
-                reject(err);
-            });
+                json: true,
+            };
+            request(options)
+            .then(resp => resolve(resp))
+            .catch(err => reject(err));
         });
     }
 
@@ -75,14 +75,14 @@ class IngestClient extends Client {
      */
     getMetadataDocument(entityUrl: string): Promise<any> {
         return this.retrieveMetadataDocument(entityUrl).then((doc: any) => {
-            if(doc["uuid"] && doc["uuid"]["uuid"]) {
-                return Promise.resolve(doc);
-            } else {
+            if(!(doc["uuid"] && doc["uuid"]["uuid"])) {
                 return Promise.reject(new NoUuidError("document at " + entityUrl + "has no UUID"));
             }
-        }).catch(NoUuidError, (err) => {
-            return Promise.reject(err);
-        });
+            if(!doc['content']) {
+                return Promise.reject(new NoContentError())
+            }
+            return Promise.resolve(doc)
+        })
     }
 
     transitionDocumentState(...args: any[]) : Promise<any> {
@@ -96,16 +96,15 @@ class IngestClient extends Client {
                         reject(new AlreadyInStateError("Failed to transition document; document was already in the target state"));
                     } else {
                         if(doc["_links"][validationState.toLowerCase()]) {
-                            request({
+                            const options = {
                                 method: "PUT",
                                 url: doc["_links"][validationState.toLowerCase()]["href"],
                                 body: {},
                                 json: true
-                            }).then(resp => {
-                                resolve(resp);
-                            }).catch(err => {
-                                reject(err);
-                            });
+                            };
+                            request(options)
+                            .then(resp => resolve(resp))
+                            .catch(err => reject(err));
                         } else {
                             reject(new NotRetryableError(`Failed to transition document; document in state ${doc['validationState']} cannot enter state ${validationState}`));
                         }
@@ -126,28 +125,27 @@ class IngestClient extends Client {
         };
 
         return new Promise((resolve, reject) => {
-            request({
+            const options = {
                 method: "PATCH",
                 url: entityUrl,
                 json: true,
-                body: patchPayload
-            }).then(resp => {
-                resolve(resp);
-            }).catch(err =>{
-                reject(err);
-            });
+                body: patchPayload,
+            };
+            request(options)
+            .then(resp => resolve(resp))
+            .catch(err => reject(err));
         });
     }
 
     findFileByValidationId(validationId: string) {
         // TODO: determine search endpoint by following rels; cache the result
         const findByValidationUrl = `${this.clientBaseUrl}/files/search/findByValidationJobValidationId?validationId=${validationId}`;
-
-        return request({
-                method: "GET",
-                url: findByValidationUrl,
-                json: true
-        });
+        const options = {
+            method: "GET",
+            url: findByValidationUrl,
+            json: true,
+        };
+        return request(options);
     }
 
     postValidationReport(entityUrl: string, validationReport: ValidationReport) : Promise<any>{
@@ -176,13 +174,14 @@ class IngestClient extends Client {
 
     fetchSchema(schemaUrl: string) : Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            request({
+            const options = {
                 method: "GET",
                 url: schemaUrl,
                 json: true,
-            })
-                .then(resp => resolve(resp))
-                .catch(err => reject(err));
+            };
+            request(options)
+            .then(resp => resolve(resp))
+            .catch(err => reject(err));
         });
     }
 
@@ -204,16 +203,13 @@ class IngestClient extends Client {
      */
     envelopeForMetadataDocument(metadataDocument: any) : Promise<any> {
         return new Promise((resolve, reject) => {
-            request({
+            const options = {
                 method: "GET",
                 url: this.envelopeLinkForResource(metadataDocument),
                 json: true,
-            }).then(resp => {
-                // envelopes are embedded entities
-                resolve(resp);
-            }).catch(err => {
-                reject(err);
-            });
+            };
+            request(options).then(resp => resolve(resp)) // envelopes are embedded entities
+            .catch(err => reject(err));
         });
     }
 
@@ -222,14 +218,16 @@ class IngestClient extends Client {
     }
 
     _reportValidationJob(fileDocumentUrl: string, validationJob: ValidationJob) {
-        return request({
+        const options = {
             method: "PATCH",
             url: fileDocumentUrl,
             body: {
                 "validationJob": validationJob
             },
-            json: true
-        }).catch(StatusCodeError, error => {
+            json: true,
+        };
+        return request(options)
+        .catch(StatusCodeError, error => {
             if(error.statusCode == 409) {
                 return Promise.reject(new RejectMessageException())
             } else {

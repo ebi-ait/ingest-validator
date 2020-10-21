@@ -29,7 +29,7 @@
   },
   "INGEST_API" : {
     "connection" : {
-      "scheme": "https",
+      "scheme": "http",
       "host" : "localhost",
       "port" : 8080
     },
@@ -38,7 +38,7 @@
   "UPLOAD_API" : {
     "connection" : {
       "scheme": "https",
-      "host" : "upload.dev.data.humancellatlas.org",
+      "host" : "upload.dev.archive.data.humancellatlas.org",
       "port" : 443
     },
     "apiKey" : "redacted"

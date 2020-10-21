@@ -1,13 +1,12 @@
 {
   "name": "ingest-validator",
   "version": "1.5.2",
-  "description": "Ingest validator implementation in node using ajv based on https://github.com/EMBL-EBI-SUBS/json-schema-validator.git.",
-  "main": "src/app.js",
-  "repository": "https://github.com/HumanCellAtlas/ingest-validator.git",
+  "description": "Ingest validator implementation in node using ajv based on https://github.com/HumanCellAtlas/ingest-validator.git which is in turn based on https://github.com/EMBL-EBI-SUBS/json-schema-validator.git.",
+  "main": "dist/app.js",
+  "repository": "https://github.com/ebi-ait/ingest-validator.git",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "tsc && node dist/app.js",
     "test": "jest",
-    "build-ts": "tsc",
     "test-watch": "nodemon --exec \"npm test\""
   },
   "engines": {
@@ -19,7 +18,7 @@
     "schema",
     "validator"
   ],
-  "author": "EMBL-EBI-SUBS, fpenim",
+  "author": "Ingest dev team",
   "license": "Apache-2.0",
   "dependencies": {
     "ajv": "^6.10.2",
