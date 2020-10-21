@@ -17,8 +17,7 @@
     "connection" : {
       "scheme": "INGEST_SCHEME",
       "host" : "INGEST_HOST",
-      "port" : "INGEST_PORT",
-      "token" : "INGEST_TOKEN"
+      "port" : "INGEST_PORT"
     },
     "maxConnections": "INGEST_MAX_CONNECTIONS"
   },

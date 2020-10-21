@@ -29,33 +29,19 @@ request.defaults({
 
 
 class IngestClient extends Client {
-    
-    token?: string;
 
     constructor(connectionConfig: IngestConnectionProperties) {
         const ingestUrl = `${connectionConfig.scheme}://${connectionConfig.host}:${connectionConfig.port}`;
         super(ingestUrl);
-        if (connectionConfig.token) {
-            this.token = connectionConfig.token;
-        }
-    }
-
-    addOptionHeader(options: any) {
-        if (this.token) {
-            options.header = {
-                'Authorization': 'Bearer ' + this.token
-            };
-        }
-        return options;
     }
     
     retrieve(entityUrl: string) : Promise<any>{
         return new Promise((resolve, reject) => {
-            let options = this.addOptionHeader({
+            const options = {
                 method: "GET",
                 url: entityUrl,
                 json: true,
-            });
+            };
             request(options)
             .then(resp => resolve(resp))
             .catch(err => reject(err));
@@ -110,12 +96,12 @@ class IngestClient extends Client {
                         reject(new AlreadyInStateError("Failed to transition document; document was already in the target state"));
                     } else {
                         if(doc["_links"][validationState.toLowerCase()]) {
-                            let options = this.addOptionHeader({
+                            const options = {
                                 method: "PUT",
                                 url: doc["_links"][validationState.toLowerCase()]["href"],
                                 body: {},
-                                json: true,
-                            });
+                                json: true
+                            };
                             request(options)
                             .then(resp => resolve(resp))
                             .catch(err => reject(err));
@@ -139,12 +125,12 @@ class IngestClient extends Client {
         };
 
         return new Promise((resolve, reject) => {
-            let options = this.addOptionHeader({
+            const options = {
                 method: "PATCH",
                 url: entityUrl,
                 json: true,
                 body: patchPayload,
-            });
+            };
             request(options)
             .then(resp => resolve(resp))
             .catch(err => reject(err));
@@ -154,11 +140,11 @@ class IngestClient extends Client {
     findFileByValidationId(validationId: string) {
         // TODO: determine search endpoint by following rels; cache the result
         const findByValidationUrl = `${this.clientBaseUrl}/files/search/findByValidationJobValidationId?validationId=${validationId}`;
-        let options = this.addOptionHeader({
+        const options = {
             method: "GET",
             url: findByValidationUrl,
             json: true,
-        });
+        };
         return request(options);
     }
 
@@ -188,12 +174,11 @@ class IngestClient extends Client {
 
     fetchSchema(schemaUrl: string) : Promise<any> {
         return new Promise<any>((resolve, reject) => {
-
-            let options = this.addOptionHeader({
+            const options = {
                 method: "GET",
                 url: schemaUrl,
                 json: true,
-            });
+            };
             request(options)
             .then(resp => resolve(resp))
             .catch(err => reject(err));
@@ -218,11 +203,11 @@ class IngestClient extends Client {
      */
     envelopeForMetadataDocument(metadataDocument: any) : Promise<any> {
         return new Promise((resolve, reject) => {
-            let options = this.addOptionHeader({
+            const options = {
                 method: "GET",
                 url: this.envelopeLinkForResource(metadataDocument),
                 json: true,
-            });
+            };
             request(options).then(resp => resolve(resp)) // envelopes are embedded entities
             .catch(err => reject(err));
         });
@@ -233,14 +218,14 @@ class IngestClient extends Client {
     }
 
     _reportValidationJob(fileDocumentUrl: string, validationJob: ValidationJob) {
-        let options = this.addOptionHeader({
+        const options = {
             method: "PATCH",
             url: fileDocumentUrl,
             body: {
                 "validationJob": validationJob
             },
             json: true,
-        });
+        };
         return request(options)
         .catch(StatusCodeError, error => {
             if(error.statusCode == 409) {
