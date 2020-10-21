@@ -40,7 +40,7 @@ class DocumentUpdateHandler implements IHandler {
 
         return this.ingestClient.getMetadataDocument(documentUrl)
             .then(doc => {return DocumentUpdateHandler.checkElegibleForValidation(doc)})
-            .then(doc => {return this.signalValidationStarted(doc, documentType)})
+            .then(doc => {return this.signalValidationStarted(doc)})
             .then(doc => {return this.validator.validate(doc, documentType)})
             .then(contentValidationReport => { return this.checkEligibleForFileValidation(contentValidationReport, documentUrl, documentType)})
             .then(validationReport => {return this.ingestClient.postValidationReport(documentUrl, validationReport)})
@@ -156,7 +156,7 @@ class DocumentUpdateHandler implements IHandler {
         }
     }
 
-    signalValidationStarted(document: any, documentType: string) : Promise<any> {
+    signalValidationStarted(document: any) : Promise<any> {
         const documentUrl = this.ingestClient.selfLinkForResource(document);
         return this.ingestClient.transitionDocumentState(documentUrl, "VALIDATING");
     }
