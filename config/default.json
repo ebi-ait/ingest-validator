@@ -29,17 +29,16 @@
   },
   "INGEST_API" : {
     "connection" : {
-      "scheme": "https",
+      "scheme": "http",
       "host" : "localhost",
-      "port" : 8080,
-      "token": ""
+      "port" : 8080
     },
     "maxConnections": 20
   },
   "UPLOAD_API" : {
     "connection" : {
       "scheme": "https",
-      "host" : "upload.dev.data.humancellatlas.org",
+      "host" : "upload.dev.archive.data.humancellatlas.org",
       "port" : 443
     },
     "apiKey" : "redacted"
