@@ -1,4 +1,4 @@
-FROM node:carbon
+FROM quay.io/ebi-ait/ingest-base-images:node_carbon
 
 # Create app directory
 RUN mkdir /app
