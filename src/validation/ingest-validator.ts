@@ -10,6 +10,7 @@ import SchemaValidator from "./schema-validator";
 import ErrorReport from "../model/error-report";
 import {NoDescribedBy, SchemaRetrievalError} from "./ingest-validation-exceptions";
 import R from "ramda";
+import ErrorType from "../model/error-type";
 
 /**
  *
@@ -41,7 +42,7 @@ class IngestValidator {
                 .then(valErrors => {return IngestValidator.parseValidationErrors(valErrors)})
                 .then(parsedErrors => {return IngestValidator.generateValidationReport(parsedErrors)})
                 .catch(SchemaRetrievalError, err => {
-                    const errReport = new ErrorReport(`Failed to retrieve schema at ${schemaUri}`);
+                    const errReport = new ErrorReport(ErrorType.MetadataError, `Failed to retrieve schema at ${schemaUri}`);
                     return Promise.resolve(ValidationReport.invalidReport([errReport]));
                 })
         }
