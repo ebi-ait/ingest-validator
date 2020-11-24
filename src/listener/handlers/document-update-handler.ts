@@ -130,9 +130,9 @@ class DocumentUpdateHandler implements IHandler {
                         return this.attemptFileValidation(contentValidationReport, doc, documentType) 
                     } else {
                         // otherwise set validation state to INVALID, return error report with NoCloudUrl
-                        const msg = "File is not uploaded.";
-                        const err = new ErrorReport(ErrorType.FileError, msg);
-                        err.userFriendlyMessage = msg;
+                        const msg = "File cloudUrl property not set.";
+                        const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
+                        err.userFriendlyMessage = "File not uploaded.";
                         return Promise.resolve(new ValidationReport("INVALID", [err]));
                     }
 
