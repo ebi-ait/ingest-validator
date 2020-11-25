@@ -11,6 +11,7 @@ import { NoUuidError, NoContentError, AlreadyInStateError, FileAlreadyValidatedE
 import { FileValidationRequestFailed } from "../../utils/upload-client/upload-client-exceptions";
 import ValidationReport from "../../model/validation-report";
 import ErrorReport from "../../model/error-report";
+import ErrorType from "../../model/error-type";
 
 class DocumentUpdateHandler implements IHandler {
     validator: IngestValidator;
@@ -90,7 +91,7 @@ class DocumentUpdateHandler implements IHandler {
                     resolve(fileValidatingReport);
                 })
                 .catch(FileValidationRequestFailed, err => {
-                    const errReport = new ErrorReport("File validation request failed");
+                    const errReport = new ErrorReport(ErrorType.FileError, "File validation request failed");
                     const rep = new ValidationReport("INVALID", [errReport]);
                     resolve(rep);
                 })
@@ -129,9 +130,9 @@ class DocumentUpdateHandler implements IHandler {
                         return this.attemptFileValidation(contentValidationReport, doc, documentType) 
                     } else {
                         // otherwise set validation state to INVALID, return error report with NoCloudUrl
-                        const msg = "Valid metadata. File is not uploaded.";
-                        const err = new ErrorReport(msg);
-                        err.userFriendlyMessage = msg;
+                        const msg = "File cloudUrl property not set.";
+                        const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
+                        err.userFriendlyMessage = "File not uploaded.";
                         return Promise.resolve(new ValidationReport("INVALID", [err]));
                     }
 

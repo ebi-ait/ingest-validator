@@ -2,14 +2,17 @@
  * Created by rolando on 07/08/2018.
  */
 import {AdditionalPropertiesParams, EnumParams, ErrorObject} from "ajv";
+import ErrorType from "./error-type";
 
 class ErrorReport {
+    errorType: ErrorType;
     message: string;
-    ajvError? : ErrorObject;
+    ajvError?: ErrorObject;
     absoluteDataPath?: string;
     userFriendlyMessage?: string;
 
-    constructor(message: string) {
+    constructor(errorType: ErrorType, message: string) {
+        this.errorType = errorType;
         this.message = message;
     }
 
@@ -46,10 +49,11 @@ class ErrorReport {
     static constructWithAjvError(ajvError: ErrorObject) : ErrorReport {
         let errorReport: ErrorReport;
         if(ajvError.message) {
-            errorReport = new ErrorReport(ajvError.message);
+            errorReport = new ErrorReport(ErrorType.MetadataError, ajvError.message);
         } else {
-            errorReport = new ErrorReport("ajvError default message");
+            errorReport = new ErrorReport(ErrorType.MetadataError, "ajvError default message");
         }
+        errorReport.errorType = ErrorType.MetadataError;
         errorReport.absoluteDataPath = ajvError.dataPath;
         errorReport.constructUserFriendlyMessage();
         return errorReport;
