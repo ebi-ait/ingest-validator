@@ -31,7 +31,7 @@ class IngestFileValidator {
      * @param fileFormat
      * @param fileName
      */
-    validateFile(fileResource: any, fileFormat: string, fileName: string) : Promise<ValidationJob> {
+    validateFile(fileResource: any, fileFormat: string, fileName: string): Promise<ValidationJob> {
 
         const validationJob = fileResource["validationJob"];
         const fileChecksums = fileResource["checksums"];
@@ -42,27 +42,23 @@ class IngestFileValidator {
                 return Promise.reject(new FileCurrentlyValidatingError());
             }
 
-            if (validationJob.validationReport) {
-                const fileSha1 = fileChecksums.sha1;
-                const validatedSha1 = validationJob.checksums.sha1;
-
-                if (validationJob.validationReport.validationState == 'VALID' && fileSha1 == validatedSha1)
-                    return  Promise.resolve(validationJob);
+            if (validationJob.validationReport && (fileChecksums.sha1 == validationJob.checksums.sha1)) {
+                return Promise.resolve(validationJob);
             }
         }
         return this.uploadAreaForFile(fileResource).then(uploadAreaUuid => {
             const validationImage = this.imageFor(fileFormat);
-            if(! validationImage) {
+            if (!validationImage) {
                 return Promise.reject(new NoFileValidationImage());
             } else {
                 const imageUrl = validationImage.imageUrl;
                 return IngestFileValidator._validateFile(fileName, uploadAreaUuid, imageUrl, this.uploadClient)
                     .then(validationJobId => {
                         return Promise.resolve({
-                                validationId: validationJobId,
-                                checksums: fileChecksums,
-                                jobCompleted: false,
-                                validationReport: null // reset validationReport
+                            validationId: validationJobId,
+                            checksums: fileChecksums,
+                            jobCompleted: false,
+                            validationReport: null // reset validationReport
                         });
                     }).catch(err => {
                         return Promise.reject(new FileValidationRequestFailed());
@@ -71,7 +67,7 @@ class IngestFileValidator {
         });
     }
 
-    static _validateFile(fileName: string, uploadAreaUuid: string, imageUrl: string, uploadClient: UploadClient) : Promise<string> {
+    static _validateFile(fileName: string, uploadAreaUuid: string, imageUrl: string, uploadClient: UploadClient): Promise<string> {
         const fileValidationRequest: FileValidationRequest = {
             fileName: fileName,
             uploadAreaUuid: uploadAreaUuid,
@@ -81,15 +77,15 @@ class IngestFileValidator {
         return uploadClient.requestFileValidationJob(fileValidationRequest);
     }
 
-    imageFor(fileFormat: string) : FileValidationImage|undefined {
+    imageFor(fileFormat: string): FileValidationImage | undefined {
         return IngestFileValidator._imageFor(fileFormat, this.fileValidationImages);
     }
 
-    static _imageFor(fileFormat: string, fileValidationImages: FileValidationImage[]) : FileValidationImage|undefined {
+    static _imageFor(fileFormat: string, fileValidationImages: FileValidationImage[]): FileValidationImage | undefined {
         return R.find(R.propEq('fileFormat', fileFormat), fileValidationImages);
     }
 
-    uploadAreaForFile(fileDocument: string) : Promise<string> {
+    uploadAreaForFile(fileDocument: string): Promise<string> {
         return new Promise((resolve, reject) => {
             this.ingestClient.envelopeForMetadataDocument(fileDocument)
                 .then((envelope: any) => {
