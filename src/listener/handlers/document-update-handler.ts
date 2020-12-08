@@ -122,22 +122,21 @@ class DocumentUpdateHandler implements IHandler {
      */
     checkEligibleForFileValidation(contentValidationReport: ValidationReport, documentUrl: string, documentType: string) : Promise<ValidationReport> {
         if(documentType.toUpperCase() === 'FILE') {
-            if (contentValidationReport.validationState.toUpperCase() == "VALID") {
-                // refresh doc before checking cloudUrl
-                return this.ingestClient.retrieveMetadataDocument(documentUrl).then((doc: any) => {
-                    if (doc['cloudUrl'] ) {
-                        // if cloud url present, proceeds with file validation
-                        return this.attemptFileValidation(contentValidationReport, doc, documentType) 
-                    } else {
-                        // otherwise set validation state to INVALID, return error report with NoCloudUrl
-                        const msg = "File cloudUrl property not set.";
-                        const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
-                        err.userFriendlyMessage = "File not uploaded.";
-                        return Promise.resolve(new ValidationReport("INVALID", [err]));
-                    }
+            // refresh doc before checking cloudUrl
+            return this.ingestClient.retrieveMetadataDocument(documentUrl).then((doc: any) => {
+                if (contentValidationReport.validationState.toUpperCase() == "VALID" && doc['cloudUrl'] ) {
+                    // if cloud url present, proceeds with file validation
+                    return this.attemptFileValidation(contentValidationReport, doc, documentType)
+                } else {
+                    // otherwise set validation state to INVALID, return error report with NoCloudUrl
+                    const msg = "File cloudUrl property not set.";
+                    const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
+                    err.userFriendlyMessage = "File not uploaded.";
+                    return Promise.resolve(new ValidationReport("INVALID", [err]));
+                }
+            });
 
-                })
-            }
+
         }
         return Promise.resolve(contentValidationReport); // return original report if not eligible for file validation
     }
