@@ -133,6 +133,8 @@ class DocumentUpdateHandler implements IHandler {
                     const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
                     err.userFriendlyMessage = "File not uploaded.";
 
+                    contentValidationReport.validationState = "INVALID";
+
                     if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
                         contentValidationReport.validationErrors = [];
                     }
