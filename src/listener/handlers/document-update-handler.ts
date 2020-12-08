@@ -132,7 +132,9 @@ class DocumentUpdateHandler implements IHandler {
                     const msg = "File cloudUrl property not set.";
                     const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
                     err.userFriendlyMessage = "File not uploaded.";
-                    return Promise.resolve(new ValidationReport("INVALID", [err]));
+
+                    contentValidationReport.validationErrors.push(err)
+                    return Promise.resolve(contentValidationReport);
                 }
             });
 
