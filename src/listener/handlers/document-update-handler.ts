@@ -6,9 +6,19 @@ import IngestFileValidator from "../../utils/ingest-client/ingest-file-validator
 import IngestClient from "../../utils/ingest-client/ingest-client";
 import IHandler from "./handler";
 import Promise from "bluebird";
-import { NoFileMetadata, NotEligibleForValidation, NoFileValidationImage} from "../../validation/ingest-validation-exceptions";
-import { NoUuidError, NoContentError, AlreadyInStateError, FileAlreadyValidatedError, FileCurrentlyValidatingError } from "../../utils/ingest-client/ingest-client-exceptions";
-import { FileValidationRequestFailed } from "../../utils/upload-client/upload-client-exceptions";
+import {
+    NoFileMetadata,
+    NotEligibleForValidation,
+    NoFileValidationImage
+} from "../../validation/ingest-validation-exceptions";
+import {
+    NoUuidError,
+    NoContentError,
+    AlreadyInStateError,
+    FileAlreadyValidatedError,
+    FileCurrentlyValidatingError
+} from "../../utils/ingest-client/ingest-client-exceptions";
+import {FileValidationRequestFailed} from "../../utils/upload-client/upload-client-exceptions";
 import ValidationReport from "../../model/validation-report";
 import ErrorReport from "../../model/error-report";
 import ErrorType from "../../model/error-type";
@@ -24,10 +34,12 @@ class DocumentUpdateHandler implements IHandler {
         this.ingestClient = ingestClient;
     }
 
-    handle(msg: string) : Promise<boolean>{
+    handle(msg: string): Promise<boolean> {
         const msgJson = JSON.parse(msg);
         return this._handle(msgJson)
-            .then(() => {return Promise.resolve(true)})
+            .then(() => {
+                return Promise.resolve(true)
+            })
             .catch((err) => {
                 console.error(`Caught an unhandled exception, message will be ignored: ${err.toString()}`)
                 return Promise.resolve(false)
@@ -40,12 +52,24 @@ class DocumentUpdateHandler implements IHandler {
         const documentType = msgJson['documentType'].toUpperCase();
 
         return this.ingestClient.getMetadataDocument(documentUrl)
-            .then(doc => {return DocumentUpdateHandler.checkElegibleForValidation(doc)})
-            .then(doc => {return this.signalValidationStarted(doc)})
-            .then(doc => {return this.validator.validate(doc, documentType)})
-            .then(contentValidationReport => { return this.checkEligibleForFileValidation(contentValidationReport, documentUrl, documentType)})
-            .then(validationReport => {return this.ingestClient.postValidationReport(documentUrl, validationReport)})
-            .then(resp => {return Promise.resolve(resp)})
+            .then(doc => {
+                return DocumentUpdateHandler.checkElegibleForValidation(doc)
+            })
+            .then(doc => {
+                return this.signalValidationStarted(doc)
+            })
+            .then(doc => {
+                return this.validator.validate(doc, documentType)
+            })
+            .then(contentValidationReport => {
+                return this.checkEligibleForFileValidation(contentValidationReport, documentUrl, documentType)
+            })
+            .then(validationReport => {
+                return this.ingestClient.postValidationReport(documentUrl, validationReport)
+            })
+            .then(resp => {
+                return Promise.resolve(resp)
+            })
             .catch(NotEligibleForValidation, err => {
                 console.info("Document at " + documentUrl + " not eligible for validation, ignoring..");
                 return Promise.resolve();
@@ -78,7 +102,7 @@ class DocumentUpdateHandler implements IHandler {
      *
      * @returns {Promise.<ValidationReport>}
      */
-    attemptFileValidation(contentValidationReport: ValidationReport, fileDocument: any, documentType: string) : Promise<ValidationReport> {
+    attemptFileValidation(contentValidationReport: ValidationReport, fileDocument: any, documentType: string): Promise<ValidationReport> {
         // proceed with data file validation if metadata doc validation passes
         const fileName = fileDocument['fileName'];
         const fileFormat = fileDocument['content']['file_core']['format'];
@@ -107,26 +131,29 @@ class DocumentUpdateHandler implements IHandler {
                     console.info("No matching validation image for file with file name " + fileName);
                     resolve(contentValidationReport);
                 }).catch(err => {
-                    console.error("ERROR: error requesting file validation job " + err);
-                    reject(err);
-                });
+                console.error("ERROR: error requesting file validation job " + err);
+                reject(err);
+            });
         });
     }
 
     /**
      * check if the document is a File and it is VALID, if so refresh the doc and check for an assigned cloudUrl.
      * proceed with file validation is cloudUrl present, other invalidate file validationState
-     * @param contentValidationReport 
-     * @param documentUrl 
-     * @param documentType 
+     * @param contentValidationReport
+     * @param documentUrl
+     * @param documentType
      */
-    checkEligibleForFileValidation(contentValidationReport: ValidationReport, documentUrl: string, documentType: string) : Promise<ValidationReport> {
-        if(documentType.toUpperCase() === 'FILE') {
+    checkEligibleForFileValidation(contentValidationReport: ValidationReport, documentUrl: string, documentType: string): Promise<ValidationReport> {
+        if (documentType.toUpperCase() === 'FILE') {
             // refresh doc before checking cloudUrl
             return this.ingestClient.retrieveMetadataDocument(documentUrl).then((doc: any) => {
-                if (contentValidationReport.validationState.toUpperCase() == "VALID" && doc['cloudUrl'] ) {
+                if (doc['cloudUrl']) {
                     // if cloud url present, proceeds with file validation
-                    return this.attemptFileValidation(contentValidationReport, doc, documentType)
+                    if (contentValidationReport.validationState.toUpperCase() == "VALID") {
+                        return this.attemptFileValidation(contentValidationReport, doc, documentType)
+                    }
+
                 } else {
                     // otherwise set validation state to INVALID, return error report with NoCloudUrl
                     const msg = "File cloudUrl property not set.";
@@ -142,6 +169,8 @@ class DocumentUpdateHandler implements IHandler {
                     contentValidationReport.validationErrors.push(err)
                     return Promise.resolve(contentValidationReport);
                 }
+
+                return Promise.resolve(contentValidationReport);
             });
 
 
@@ -156,15 +185,15 @@ class DocumentUpdateHandler implements IHandler {
      * @param document
      * @param documentType
      */
-    static checkElegibleForValidation(document: any) : Promise<any>{
-        if(document['validationState'].toUpperCase() === 'DRAFT') {
+    static checkElegibleForValidation(document: any): Promise<any> {
+        if (document['validationState'].toUpperCase() === 'DRAFT') {
             return Promise.resolve(document);
         } else {
             return Promise.reject(new NotEligibleForValidation());
         }
     }
 
-    signalValidationStarted(document: any) : Promise<any> {
+    signalValidationStarted(document: any): Promise<any> {
         const documentUrl = this.ingestClient.selfLinkForResource(document);
         return this.ingestClient.transitionDocumentState(documentUrl, "VALIDATING");
     }
