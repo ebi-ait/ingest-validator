@@ -36,9 +36,9 @@ class FileValidationHandler implements IHandler{
                 let validationOutput = JSON.parse(msgContent['stdout']);
                 const validationState = validationOutput['validation_state'];
                 let validationErrors = validationOutput['validation_errors'];
-                const errorMessage = validationOutput['user_friendly_message'];
 
                 validationErrors = validationErrors.map( function (error: any) {
+                    const errorMessage = error['user_friendly_message'];
                    return new ErrorReport(ErrorType.FileError, errorMessage, errorMessage)
                 });
 
