@@ -110,9 +110,14 @@ class DocumentUpdateHandler implements IHandler {
         return new Promise((resolve, reject) => {
             this.fileValidator.validateFile(fileDocument, fileFormat, fileName)
                 .then(validationJob => {
-                    const fileValidatingReport = ValidationReport.validatingReport();
-                    fileValidatingReport.validationJob = validationJob;
-                    resolve(fileValidatingReport);
+                    let validationReport = ValidationReport.validatingReport();
+
+                    if(validationJob.jobCompleted && validationJob.validationReport) {
+                        validationReport = validationJob.validationReport
+                    }
+
+                    validationReport.validationJob = validationJob;
+                    resolve(validationReport);
                 })
                 .catch(FileValidationRequestFailed, err => {
                     const errReport = new ErrorReport(ErrorType.FileError, "File validation request failed");
