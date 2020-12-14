@@ -11,9 +11,10 @@ class ErrorReport {
     absoluteDataPath?: string;
     userFriendlyMessage?: string;
 
-    constructor(errorType: ErrorType, message: string) {
+    constructor(errorType: ErrorType, message: string, userFriendlyMessage?: string) {
         this.errorType = errorType;
         this.message = message;
+        this.userFriendlyMessage = userFriendlyMessage;
     }
 
     constructUserFriendlyMessage() : void {
