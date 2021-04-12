@@ -5,4 +5,5 @@ Unit Test:
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
   stage: build
   script:
+    - npm install -g jest
     - npm run test
