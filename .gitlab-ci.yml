@@ -4,5 +4,5 @@ include:
 Unit Test:
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
   script:
-    - npm install -g jest
+    - npm install
     - npm run test
