@@ -78,16 +78,16 @@ class fileValidationContext {
     }
 
     setFileAsInvalid() {
-        this.fileResource['validationJob'] = {
-            "validationReport": {
+        this.fileResource['validationJob']["validationReport"] =
+            {
                 "validationState": "Invalid",
                 "validationErrors": [{
                     "errorType": "FILE_ERROR",
                     "message": "Invalid file because of something.",
                     "userFriendlyMessage": "File is invalid. Please fix."
                 }]
+
             }
-        }
     }
 }
 
