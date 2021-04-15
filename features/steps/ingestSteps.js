@@ -67,14 +67,27 @@ class fileValidationContext {
         };
     }
 
-    setFileName(filename){
+    setFileName(filename) {
         this.fileResource['fileName'] = filename;
         this.fileResource['content']['file_core']['file_name'] = filename;
 
     }
 
-    setFileFormat(fileFormat){
+    setFileFormat(fileFormat) {
         this.fileResource['content']['file_core']['format'] = fileFormat;
+    }
+
+    setFileAsInvalid() {
+        this.fileResource['validationJob'] = {
+            "validationReport": {
+                "validationState": "Invalid",
+                "validationErrors": [{
+                    "errorType": "FILE_ERROR",
+                    "message": "Invalid file because of something.",
+                    "userFriendlyMessage": "File is invalid. Please fix."
+                }]
+            }
+        }
     }
 }
 
@@ -84,13 +97,23 @@ Given(/^a file with filename (.*)$/, function (file_name) {
     this.setFileName(file_name);
 });
 
+Given(/^a valid file with filename (.*)$/, function (file_name) {
+    this.setFileName(file_name);
+});
+
+Given(/^an invalid file with filename (.*)$/, function (file_name) {
+    this.setFileAsInvalid();
+});
+
 Given(/^format field set to (.*)$/, function (file_format) {
     this.setFileFormat(file_format);
 });
 
-When(/^metadata is validated (.*) (.*)$/, function (file_name, file_format) {
+When(/^metadata is validated$/, function () {
     const validationImageConfigs = Object.entries(config.get("FILE_VALIDATION_IMAGES"));
-    const validationImages = R.map((configEntry) => { return {fileFormat: configEntry[0], imageUrl: configEntry[1]}}, validationImageConfigs);
+    const validationImages = R.map((configEntry) => {
+        return {fileFormat: configEntry[0], imageUrl: configEntry[1]}
+    }, validationImageConfigs);
     fileValidator = new IngestFileValidator(null, validationImages, null);
     docHandler = new DocumentUpdateHandler(null, fileValidator, null)
     this.validationReport = docHandler.attemptFileValidation(this.fileResource['validationJob']['validationReport'], this.fileResource);
@@ -101,3 +124,4 @@ Then(/^File is (.*) after validation$/, async function (validation_state) {
         assert.equal(validationReport['validationState'].toLowerCase(), validation_state.toLowerCase());
     });
 });
+
