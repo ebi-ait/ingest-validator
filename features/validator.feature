@@ -4,45 +4,83 @@ Feature: file format validation
   # (and see https://www.jetbrains.com/help/idea/handling-issues.html to make this
   #  number clickable and leading to ZenHub)
 
-  Scenario: fastq file with matching format
-    Given a file with extension fastq.gz
-    And format field set to fastq.gz
-    When metadata is validated
-    Then All files are valid after fastq validation
+  Scenario Outline: file extension matches file format
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
 
-  Scenario: valid fastq file with disagreeing format field
+    Examples:
+      |  file_name | file_format | validation_state |
+      | t.fastq.gz |    fastq.gz |            VALID |
+      |      t.bam |         bam |            VALID |
+      |      t.txt |         txt |            VALID |
 
-  Scenario: valid fastq file with no format
+  Scenario Outline: file extension mismatches file formats
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
 
-  Scenario: non fastq file called x.fastq with fastq format field
-    Given non fastqu file named x.fastq
-    When validation happens
-    Then validation error
+    Examples:
+      | file_name | file_format | validation_state |
+      |     t.bam |    fastq.gz |          INVALID |
+      |     t.txt |         bam |          INVALID |
+      |   t.fastq |         txt |          INVALID |
 
-  Scenario: non fastq file called x.fastq with matching non fastq field
-    Given non fastq file named x.fastq
-    And matching non fastq format field
-    When validation happens
-    Then validation error - mismatch between file name and format
+  Scenario Outline: file extension mismatches file formats - no validator
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
 
-  Scenario: non fastq file called x.fastq with no format field
-    Given non fastq file named x.fastq
-    When validation happens
-    Then chosen validator - fastq (according to name)
-    And validation error - file contents invalid
+    Examples:
+      | file_name | file_format | validation_state |
+      |     t.bam |         pdf |          INVALID |
+      |     t.txt |         bam |          INVALID |
+      |     t.pdf |         txt |          INVALID |
+
+  Scenario Outline: fastq file matches format
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
+
+    Examples:
+      |           file_name |       file_format | validation_state |
+      |       file.fastq.gz |          fastq.gz |            VALID |
+      |          file.fq.gz |             fq.gz |            VALID |
+      |          file.fastq |             fastq |            VALID |
+      |   file.fastq.tar.gz |      fastq.tar.gz |            VALID |
+
+  Scenario Outline: fastq file matches format
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
+
+    Examples:
+      |           file_name |       file_format | validation_state |
+      |       file.fastq.gz |             fq.gz |            VALID |
+      |          file.fq.gz |          fastq.gz |            VALID |
+      |          file.fastq |             fq.gz |            VALID |
+      |   file.fastq.tar.gz |          fastq.gz |            VALID |
 
 
-# more scenarios
-#    2)fq.gz file extension, fq.gz format
-#    3)fastq file extension, fastq format
-#    4)fq file extension, fq format"
+  Scenario Outline: fastq file with no format
+    Given a file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated <file_name> <file_format>
+    Then File is <validation_state> after validation
+
+    Examples:
+      |         file_name |  file_format | validation_state |
+      |           file.fq |              |            VALID |
+      |        file.fq.gz |              |            VALID |
+      |        file.fastq |              |            VALID |
+      |     file.fastq.gz |              |            VALID |
+      | file.fastq.tar.gz |              |            VALID |
 
 
 
-Feature: a feature
-  Scenario: a scenario
-    Given a table step
-      | file name | format field |
-      | Apricot   | 5      |
-      | Brocolli  | 2      |
-      | Cucumber  | 10     |
+

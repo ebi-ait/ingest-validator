@@ -8,6 +8,7 @@ namespace ingestValidatorExceptions {
     export class NoFileMetadata extends Error {}
     export class NotEligibleForValidation extends Error {}
     export class SchemaRetrievalError extends Error {}
+    export class FileExtMismatchFormat extends Error {}
 }
 
 export = ingestValidatorExceptions;
