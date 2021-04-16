@@ -38,8 +38,7 @@ class IngestFileValidator {
 
         const fileExt = fileName.substring(fileName.indexOf('.') + 1);
 
-        if (fileFormat != fileExt && fileFormat && fileExt)
-        {
+        if (fileFormat != fileExt && fileFormat && fileExt) {
             const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
             return Promise.reject(new FileExtMismatchFormat(message))
         }
