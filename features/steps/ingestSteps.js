@@ -49,21 +49,6 @@ class fileValidationContext {
                 }
             },
             "dataFileUuid": "test-uuid",
-            "_links": {
-                "self": {
-                    "href": "https://api.ingest.archive.data.humancellatlas.org/files/5f5fa003db657458f1bdc423"
-                },
-                "file": {
-                    "href": "https://api.ingest.archive.data.humancellatlas.org/files/5f5fa003db657458f1bdc423",
-                    "title": "A single file"
-                },
-                "validating": {
-                    "href": "https://api.ingest.archive.data.humancellatlas.org/files/5f5fa003db657458f1bdc423/validatingEvent"
-                },
-                "validationJob": {
-                    "href": "https://api.ingest.archive.data.humancellatlas.org/files/5f5fa003db657458f1bdc423/validationJob"
-                }
-            }
         };
     }
 

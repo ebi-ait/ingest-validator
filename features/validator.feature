@@ -38,10 +38,10 @@ Feature: file format validation
 
     Examples:
       |           file_name |       file_format | validation_state |
-      |       file.fastq.gz |             fq.gz |            VALID |
-      |          file.fq.gz |          fastq.gz |            VALID |
-      |          file.fastq |             fq.gz |            VALID |
-      |   file.fastq.tar.gz |          fastq.gz |            VALID |
+      |       file.fastq.gz |             fq.gz |          INVALID |
+      |          file.fq.gz |          fastq.gz |          INVALID |
+      |          file.fastq |             fq.gz |          INVALID |
+      |   file.fastq.tar.gz |          fastq.gz |          INVALID |
 
   Scenario Outline: 2.a.2 invalid fastq file - filename extension doesn't match the file format - both point to fastq validator
     Given an invalid file with filename <file_name>

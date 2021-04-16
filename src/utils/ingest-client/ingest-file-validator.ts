@@ -37,16 +37,10 @@ class IngestFileValidator {
         const fileChecksums = fileResource["checksums"];
 
         const fileExt = fileName.substring(fileName.indexOf('.') + 1);
-        const fileExtValidatorImage = this.imageFor(fileExt);
-        const fileFormatImage = this.imageFor(fileFormat);
 
-        //TODO simplify this
-        if ((fileExtValidatorImage && fileFormatImage && fileExtValidatorImage.imageUrl != fileFormatImage.imageUrl) ||
-            (fileFormat && (fileFormat != fileExt) && !fileFormatImage && !fileExtValidatorImage) ||
-            (!fileExtValidatorImage && fileFormatImage) ||
-            (fileExtValidatorImage && !fileFormatImage && fileFormat && fileExt && (fileFormat != fileExt)))
+        if (fileFormat != fileExt && fileFormat && fileExt)
         {
-            const message = `The validator from file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the validator from the file format, "${fileFormat}", in the metadata.`;
+            const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
             return Promise.reject(new FileExtMismatchFormat(message))
         }
 
