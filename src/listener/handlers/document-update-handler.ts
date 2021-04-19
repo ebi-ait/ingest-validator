@@ -7,8 +7,6 @@ import IngestClient from "../../utils/ingest-client/ingest-client";
 import IHandler from "./handler";
 import Promise from "bluebird";
 import {
-    NoFileMetadata,
-    FileExtMismatchFormat,
     NotEligibleForValidation,
     NoFileValidationImage
 } from "../../validation/ingest-validation-exceptions";
@@ -110,15 +108,15 @@ class DocumentUpdateHandler implements IHandler {
 
         return new Promise((resolve, reject) => {
             this.fileValidator.validateFile(fileDocument, fileFormat, fileName).then(validationJob => {
-                    let validationReport = ValidationReport.validatingReport();
+                let validationReport = ValidationReport.validatingReport();
 
-                    if (validationJob.jobCompleted && validationJob.validationReport) {
-                        validationReport = validationJob.validationReport
-                    }
+                if (validationJob.jobCompleted && validationJob.validationReport) {
+                    validationReport = validationJob.validationReport
+                }
 
-                    validationReport.validationJob = validationJob;
-                    resolve(validationReport);
-                })
+                validationReport.validationJob = validationJob;
+                resolve(validationReport);
+            })
                 .catch(FileValidationRequestFailed, err => {
                     const errReport = new ErrorReport(ErrorType.FileError, "File validation request failed");
                     const rep = new ValidationReport("INVALID", [errReport]);
@@ -132,18 +130,13 @@ class DocumentUpdateHandler implements IHandler {
                     console.info(`Request to validate File with name ${fileName} but it's currently validating`);
                     resolve(ValidationReport.validatingReport());
                 })
-                .catch(FileExtMismatchFormat, err => {
-                    const errReport = new ErrorReport(ErrorType.MetadataError, err.message, err.message);
-                    const report = new ValidationReport("INVALID", [errReport]);
-                    resolve(report);
-                })
                 .catch(NoFileValidationImage, err => {
                     console.info("No matching validation image for file with file name " + fileName);
                     resolve(contentValidationReport);
                 }).catch(err => {
-                    console.error("ERROR: error requesting file validation job " + err);
-                    reject(err);
-                });
+                console.error("ERROR: error requesting file validation job " + err);
+                reject(err);
+            });
         });
     }
 
@@ -157,31 +150,35 @@ class DocumentUpdateHandler implements IHandler {
     checkEligibleForFileValidation(contentValidationReport: ValidationReport, documentUrl: string, documentType: string): Promise<ValidationReport> {
         if (documentType.toUpperCase() === 'FILE') {
             // refresh doc before checking cloudUrl
-            return this.ingestClient.retrieveMetadataDocument(documentUrl).then((doc: any) => {
-                if (doc['cloudUrl']) {
-                    // if cloud url present, proceeds with file validation
-                    if (contentValidationReport.validationState.toUpperCase() == "VALID") {
-                        return this.attemptFileValidation(contentValidationReport, doc)
+            this.ingestClient.retrieveMetadataDocument(documentUrl)
+                .then((doc: any) => {
+                    if (doc['cloudUrl']) {
+                        // if cloud url present, proceeds with file validation
+                        if (contentValidationReport.validationState.toUpperCase() == "VALID") {
+                            return this.attemptFileValidation(contentValidationReport, doc)
+                        }
+                    } else {
+                        return this.validateFileFormat(contentValidationReport, doc).then(
+                            contentValidationReport => {
+                                // otherwise set validation state to INVALID, return error report with NoCloudUrl
+                                const msg = "File cloudUrl property not set.";
+                                const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
+                                err.userFriendlyMessage = "File not uploaded.";
+
+                                contentValidationReport.validationState = "INVALID";
+
+                                if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
+                                    contentValidationReport.validationErrors = [];
+                                }
+
+                                contentValidationReport.validationErrors.push(err)
+                                return Promise.resolve(contentValidationReport);
+                            }
+                        );
                     }
 
-                } else {
-                    // otherwise set validation state to INVALID, return error report with NoCloudUrl
-                    const msg = "File cloudUrl property not set.";
-                    const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
-                    err.userFriendlyMessage = "File not uploaded.";
-
-                    contentValidationReport.validationState = "INVALID";
-
-                    if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
-                        contentValidationReport.validationErrors = [];
-                    }
-
-                    contentValidationReport.validationErrors.push(err)
                     return Promise.resolve(contentValidationReport);
-                }
-
-                return Promise.resolve(contentValidationReport);
-            });
+                });
 
 
         }
@@ -206,6 +203,30 @@ class DocumentUpdateHandler implements IHandler {
     signalValidationStarted(document: any): Promise<any> {
         const documentUrl = this.ingestClient.selfLinkForResource(document);
         return this.ingestClient.transitionDocumentState(documentUrl, "VALIDATING");
+    }
+
+    validateFileFormat(contentValidationReport: ValidationReport, doc: any): Promise<ValidationReport> {
+        return new Promise((resolve, reject) => {
+            const fileName = doc['fileName'];
+            const fileFormat = doc['content']['file_core']['format'];
+
+            const fileExt = fileName.substring(fileName.indexOf('.') + 1);
+
+            if (fileFormat != fileExt && fileFormat && fileExt) {
+                const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
+                const err = new ErrorReport(ErrorType.MetadataError, message, message);
+
+                contentValidationReport.validationState = "INVALID";
+
+                if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
+                    contentValidationReport.validationErrors = [];
+                }
+                contentValidationReport.validationErrors.push(err)
+                resolve(contentValidationReport);
+            }
+
+            resolve(contentValidationReport);
+        });
     }
 }
 

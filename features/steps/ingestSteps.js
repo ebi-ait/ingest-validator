@@ -101,7 +101,7 @@ When(/^metadata is validated$/, function () {
     }, validationImageConfigs);
     fileValidator = new IngestFileValidator(null, validationImages, null);
     docHandler = new DocumentUpdateHandler(null, fileValidator, null)
-    this.validationReport = docHandler.attemptFileValidation(this.fileResource['validationJob']['validationReport'], this.fileResource);
+    this.validationReport = docHandler.validateFileFormat(this.fileResource['validationJob']['validationReport'], this.fileResource);
 });
 
 Then(/^File is (.*) after validation$/, async function (validation_state) {
