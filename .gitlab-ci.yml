@@ -5,5 +5,4 @@ Unit Test:
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
   script:
     - npm install
-    - npm run test
-    - npm run cucumber
+    - npm run test && npm run cucumber
