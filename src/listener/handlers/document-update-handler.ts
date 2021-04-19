@@ -8,6 +8,7 @@ import IHandler from "./handler";
 import Promise from "bluebird";
 import {
     NoFileMetadata,
+    FileExtMismatchFormat,
     NotEligibleForValidation,
     NoFileValidationImage
 } from "../../validation/ingest-validation-exceptions";
@@ -102,17 +103,16 @@ class DocumentUpdateHandler implements IHandler {
      *
      * @returns {Promise.<ValidationReport>}
      */
-    attemptFileValidation(contentValidationReport: ValidationReport, fileDocument: any, documentType: string): Promise<ValidationReport> {
+    attemptFileValidation(contentValidationReport: ValidationReport, fileDocument: any): Promise<ValidationReport> {
         // proceed with data file validation if metadata doc validation passes
         const fileName = fileDocument['fileName'];
         const fileFormat = fileDocument['content']['file_core']['format'];
 
         return new Promise((resolve, reject) => {
-            this.fileValidator.validateFile(fileDocument, fileFormat, fileName)
-                .then(validationJob => {
+            this.fileValidator.validateFile(fileDocument, fileFormat, fileName).then(validationJob => {
                     let validationReport = ValidationReport.validatingReport();
 
-                    if(validationJob.jobCompleted && validationJob.validationReport) {
+                    if (validationJob.jobCompleted && validationJob.validationReport) {
                         validationReport = validationJob.validationReport
                     }
 
@@ -132,13 +132,18 @@ class DocumentUpdateHandler implements IHandler {
                     console.info(`Request to validate File with name ${fileName} but it's currently validating`);
                     resolve(ValidationReport.validatingReport());
                 })
+                .catch(FileExtMismatchFormat, err => {
+                    const errReport = new ErrorReport(ErrorType.MetadataError, err.message, err.message);
+                    const report = new ValidationReport("INVALID", [errReport]);
+                    resolve(report);
+                })
                 .catch(NoFileValidationImage, err => {
                     console.info("No matching validation image for file with file name " + fileName);
                     resolve(contentValidationReport);
                 }).catch(err => {
-                console.error("ERROR: error requesting file validation job " + err);
-                reject(err);
-            });
+                    console.error("ERROR: error requesting file validation job " + err);
+                    reject(err);
+                });
         });
     }
 
@@ -156,7 +161,7 @@ class DocumentUpdateHandler implements IHandler {
                 if (doc['cloudUrl']) {
                     // if cloud url present, proceeds with file validation
                     if (contentValidationReport.validationState.toUpperCase() == "VALID") {
-                        return this.attemptFileValidation(contentValidationReport, doc, documentType)
+                        return this.attemptFileValidation(contentValidationReport, doc)
                     }
 
                 } else {

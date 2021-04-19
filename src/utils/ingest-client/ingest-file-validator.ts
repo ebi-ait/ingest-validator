@@ -7,7 +7,7 @@ import IngestClient from "./ingest-client";
 import R from "ramda";
 import UploadClient from "../upload-client/upload-client";
 import {FileAlreadyValidatedError, FileCurrentlyValidatingError} from "./ingest-client-exceptions";
-import {NoFileValidationImage} from "../../validation/ingest-validation-exceptions";
+import {FileExtMismatchFormat, NoFileValidationImage} from "../../validation/ingest-validation-exceptions";
 import ValidationReport from "../../model/validation-report";
 import {FileValidationRequestFailed} from "../upload-client/upload-client-exceptions";
 
@@ -36,6 +36,13 @@ class IngestFileValidator {
         const validationJob = fileResource["validationJob"];
         const fileChecksums = fileResource["checksums"];
 
+        const fileExt = fileName.substring(fileName.indexOf('.') + 1);
+
+        if (fileFormat != fileExt && fileFormat && fileExt) {
+            const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
+            return Promise.reject(new FileExtMismatchFormat(message))
+        }
+
         if (validationJob) {
             const completed = validationJob.jobCompleted;
             if (!completed) {
@@ -47,6 +54,7 @@ class IngestFileValidator {
             }
         }
         return this.uploadAreaForFile(fileResource).then(uploadAreaUuid => {
+
             const validationImage = this.imageFor(fileFormat);
             if (!validationImage) {
                 return Promise.reject(new NoFileValidationImage());

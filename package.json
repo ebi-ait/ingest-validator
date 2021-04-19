@@ -7,6 +7,7 @@
   "scripts": {
     "start": "tsc && node dist/app.js",
     "test": "jest",
+    "cucumber": "tsc && cucumber-js --format @cucumber/pretty-formatter",
     "test-watch": "nodemon --exec \"npm test\""
   },
   "engines": {
@@ -40,6 +41,8 @@
     "yargs": "^12.0.5"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^7.1.0",
+    "@cucumber/pretty-formatter": "^1.0.0-alpha.0",
     "@types/amqplib": "^0.5.13",
     "@types/bluebird": "^3.5.27",
     "@types/config": "0.0.34",
