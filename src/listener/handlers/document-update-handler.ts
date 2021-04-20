@@ -152,37 +152,37 @@ class DocumentUpdateHandler implements IHandler {
             // refresh doc before checking cloudUrl
             return this.ingestClient.retrieveMetadataDocument(documentUrl)
                 .then((doc: any) => {
-                    if (doc['cloudUrl']) {
-                        // if cloud url present, proceeds with file validation
-                        if (contentValidationReport.validationState.toUpperCase() == "VALID") {
-                            return this.attemptFileValidation(contentValidationReport, doc)
-                        }
-                    } else {
-                        return this.validateFileFormat(contentValidationReport, doc).then(
-                            contentValidationReport => {
-                                // otherwise set validation state to INVALID, return error report with NoCloudUrl
-                                const msg = "File cloudUrl property not set.";
-                                const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
-                                err.userFriendlyMessage = "File not uploaded.";
+                    const fileName = doc['fileName'];
+                    const fileFormat = doc['content']['file_core']['format'];
 
-                                contentValidationReport.validationState = "INVALID";
+                    const fileExt = fileName.substring(fileName.indexOf('.') + 1);
 
-                                if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
-                                    contentValidationReport.validationErrors = [];
-                                }
+                    if (fileFormat != fileExt && fileFormat && fileExt) {
+                        const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
+                        const err = new ErrorReport(ErrorType.MetadataError, message, message);
+                        contentValidationReport.validationState = "INVALID";
+                        contentValidationReport.addError(err);
+                    }
 
-                                contentValidationReport.validationErrors.push(err)
-                                return Promise.resolve(contentValidationReport);
-                            }
-                        );
+                    if (!doc['cloudUrl']) {
+                        // otherwise set validation state to INVALID, return error report with NoCloudUrl
+                        const msg = "File cloudUrl property not set.";
+                        const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
+                        err.userFriendlyMessage = "File not uploaded.";
+                        contentValidationReport.validationState = "INVALID";
+                        contentValidationReport.addError(err);
+                    }
+
+                    if (doc['cloudUrl'] && (contentValidationReport.validationState.toUpperCase() == "VALID")) {
+                        return this.attemptFileValidation(contentValidationReport, doc);
                     }
 
                     return Promise.resolve(contentValidationReport);
                 });
-
         }
         return Promise.resolve(contentValidationReport); // return original report if not eligible for file validation
     }
+
 
     /**
      *
@@ -204,29 +204,6 @@ class DocumentUpdateHandler implements IHandler {
         return this.ingestClient.transitionDocumentState(documentUrl, "VALIDATING");
     }
 
-    validateFileFormat(contentValidationReport: ValidationReport, doc: any): Promise<ValidationReport> {
-        return new Promise((resolve, reject) => {
-            const fileName = doc['fileName'];
-            const fileFormat = doc['content']['file_core']['format'];
-
-            const fileExt = fileName.substring(fileName.indexOf('.') + 1);
-
-            if (fileFormat != fileExt && fileFormat && fileExt) {
-                const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
-                const err = new ErrorReport(ErrorType.MetadataError, message, message);
-
-                contentValidationReport.validationState = "INVALID";
-
-                if (!contentValidationReport.validationErrors || contentValidationReport.validationErrors.length == 0) {
-                    contentValidationReport.validationErrors = [];
-                }
-                contentValidationReport.validationErrors.push(err)
-                resolve(contentValidationReport);
-            }
-
-            resolve(contentValidationReport);
-        });
-    }
 }
 
 export default DocumentUpdateHandler;

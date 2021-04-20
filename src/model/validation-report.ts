@@ -30,6 +30,13 @@ class ValidationReport {
         this.validationJob = job;
         this.validationJob.validationReport = this;
     }
+
+    addError(errorReport: ErrorReport): void {
+        if (!this.validationErrors || this.validationErrors.length == 0) {
+            this.validationErrors = [];
+        }
+        this.validationErrors.push(errorReport);
+    }
 }
 
 export default ValidationReport;
