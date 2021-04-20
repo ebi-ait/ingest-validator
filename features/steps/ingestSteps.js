@@ -123,7 +123,6 @@ When(/^metadata is validated$/, function () {
 Then(/^File is (.*) after validation$/, async function (validation_state) {
     await this.validationReport.then(function (validationReport) {
         assert.equal(validationReport['validationState'].toLowerCase(), validation_state.toLowerCase());
-        const bp = 0;
     });
 });
 
