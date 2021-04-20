@@ -1,16 +1,21 @@
-const R = require("ramda")
-const config = require("config")
+// TODO convert to typescript
+
+const R = require("ramda");
+const jest = require("jest-mock");
+const config = require("config");
 const {Given, When, Then} = require("@cucumber/cucumber");
+
 const IngestFileValidator = require("../../dist/utils/ingest-client/ingest-file-validator").default;
 const DocumentUpdateHandler = require("../../dist/listener/handlers/document-update-handler").default;
+const IngestClient = require("../../dist/utils/ingest-client/ingest-client").default;
+const ValidationReport = require("../../dist/model/validation-report").default;
+
 const assert = require("assert").strict;
 const {setWorldConstructor} = require("@cucumber/cucumber");
 
-let fileValidator;
-let docHandler;
-
 class fileValidationContext {
     constructor() {
+        this.validationReport = undefined;
         this.fileResource = {
             "content": {
                 "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
@@ -99,14 +104,26 @@ When(/^metadata is validated$/, function () {
     const validationImages = R.map((configEntry) => {
         return {fileFormat: configEntry[0], imageUrl: configEntry[1]}
     }, validationImageConfigs);
-    fileValidator = new IngestFileValidator(null, validationImages, null);
-    docHandler = new DocumentUpdateHandler(null, fileValidator, null)
-    this.validationReport = docHandler.validateFileFormat(this.fileResource['validationJob']['validationReport'], this.fileResource);
+    const ingestClient = new IngestClient('dummy-url');
+    jest.spyOn(ingestClient, 'retrieveMetadataDocument').mockResolvedValue(this.fileResource);
+
+    const fileValidator = new IngestFileValidator(null, validationImages, ingestClient);
+    const docHandler = new DocumentUpdateHandler(null, fileValidator, ingestClient);
+
+    const validationReport = new ValidationReport( this.fileResource.validationState);
+    for(const err in this.fileResource.validationErrors){
+        validationReport.addError(err)
+    }
+
+    jest.spyOn(docHandler, 'attemptFileValidation').mockResolvedValue(this.fileResource.validationJob.validationReport);
+
+    this.validationReport = docHandler.checkEligibleForFileValidation(validationReport, 'dummy-url', 'FILE');
 });
 
 Then(/^File is (.*) after validation$/, async function (validation_state) {
     await this.validationReport.then(function (validationReport) {
         assert.equal(validationReport['validationState'].toLowerCase(), validation_state.toLowerCase());
+        const bp = 0;
     });
 });
 
