@@ -1,0 +1,33 @@
+{
+  "content": {
+    "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+    "schema_type": "file",
+    "file_core": {
+      "file_name": "test-file.fastq.gz",
+      "format": "fastq.gz"
+    }
+  },
+  "fileName": "test-file.fastq.gz",
+  "type": "File",
+  "uuid": {
+    "uuid": "test-uuid"
+  },
+  "validationState": "Valid",
+  "validationErrors": [],
+  "cloudUrl": "s3://test-bucket/test-uuid/test-file.fastq.gz",
+  "checksums": {
+    "sha1": "debc56cbaf3322ffedb47e4fa01c268331a85d12"
+  },
+  "validationJob": {
+    "validationId": "366a3b27-59b6-451d-871d-4e53bf7e6f4d",
+    "checksums": {
+      "sha1": "debc56cbaf3322ffedb47e4fa01c268331a85d12"
+    },
+    "jobCompleted": true,
+    "validationReport": {
+      "validationState": "Valid",
+      "validationErrors": []
+    }
+  },
+  "dataFileUuid": "test-uuid"
+}
