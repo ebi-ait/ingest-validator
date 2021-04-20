@@ -1,5 +1,4 @@
 // TODO convert to typescript
-
 const R = require("ramda");
 const jest = require("jest-mock");
 const config = require("config");
@@ -79,12 +78,18 @@ class fileValidationContext {
 
             }
     }
+
+    removeCloudUrl = function () {
+        delete this.fileResource['cloudUrl'];
+    }
 }
 
 setWorldConstructor(fileValidationContext);
 
-Given(/^a file with filename (.*)$/, function (file_name) {
+
+Given(/^a file with filename (.*) which is not uploaded yet$/, function (file_name) {
     this.setFileName(file_name);
+    this.removeCloudUrl();
 });
 
 Given(/^a valid file with filename (.*)$/, function (file_name) {
@@ -122,7 +127,16 @@ When(/^metadata is validated$/, function () {
 
 Then(/^File is (.*) after validation$/, async function (validation_state) {
     await this.validationReport.then(function (validationReport) {
-        assert.equal(validationReport['validationState'].toLowerCase(), validation_state.toLowerCase());
+        assert.equal(validationReport.validationState.toLowerCase(), validation_state.toLowerCase());
+    });
+});
+
+Then(/^File is (.*) and has 2 errors$/, async function (validation_state) {
+    await this.validationReport.then(function (validationReport) {
+        assert.equal(validationReport.validationState.toLowerCase(), validation_state.toLowerCase());
+        assert.equal(validationReport.validationErrors.length, 2);
+        assert.equal(validationReport.validationErrors[1].errorType, "FILE_NOT_UPLOADED");
+        assert.equal(validationReport.validationErrors[0].errorType, "METADATA_ERROR");
     });
 });
 
