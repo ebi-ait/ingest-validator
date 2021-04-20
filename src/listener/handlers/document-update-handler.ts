@@ -150,7 +150,7 @@ class DocumentUpdateHandler implements IHandler {
     checkEligibleForFileValidation(contentValidationReport: ValidationReport, documentUrl: string, documentType: string): Promise<ValidationReport> {
         if (documentType.toUpperCase() === 'FILE') {
             // refresh doc before checking cloudUrl
-            this.ingestClient.retrieveMetadataDocument(documentUrl)
+            return this.ingestClient.retrieveMetadataDocument(documentUrl)
                 .then((doc: any) => {
                     if (doc['cloudUrl']) {
                         // if cloud url present, proceeds with file validation
@@ -179,7 +179,6 @@ class DocumentUpdateHandler implements IHandler {
 
                     return Promise.resolve(contentValidationReport);
                 });
-
 
         }
         return Promise.resolve(contentValidationReport); // return original report if not eligible for file validation
