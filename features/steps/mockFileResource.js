@@ -30,7 +30,7 @@ class MockFileResource {
             }
     }
 
-    removeCloudUrl = function () {
+    removeCloudUrl() {
         delete this.fileResource['cloudUrl'];
     }
 }
