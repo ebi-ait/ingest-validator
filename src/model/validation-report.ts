@@ -32,7 +32,7 @@ class ValidationReport {
     }
 
     addError(errorReport: ErrorReport): void {
-        if (!this.validationErrors || this.validationErrors.length == 0) {
+        if (!this.validationErrors || !this.validationErrors.length) {
             this.validationErrors = [];
         }
         this.validationErrors.push(errorReport);
