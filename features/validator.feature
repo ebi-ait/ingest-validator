@@ -71,31 +71,31 @@ Feature: file format validation
 
   Scenario Outline: 2.b.2 filename extension doesn't match the file format -- filename extension pointing to fastq validator - file format is blank
     Given a valid file with filename <file_name>
-    And format field set to <file_format>
+    And format field is empty
     When metadata is validated
     Then File is <validation_state> after validation
 
     Examples:
-      |           file_name |       file_format | validation_state |
-      |       file.fastq.gz |                   |            VALID |
-      |          file.fq.gz |                   |            VALID |
-      |          file.fastq |                   |            VALID |
-      |   file.fastq.tar.gz |                   |            VALID |
-      |             file.fq |                   |            VALID |
+      |           file_name | validation_state |
+      |       file.fastq.gz |            VALID |
+      |          file.fq.gz |            VALID |
+      |          file.fastq |            VALID |
+      |   file.fastq.tar.gz |            VALID |
+      |             file.fq |            VALID |
 
   Scenario Outline: 2.b.3 filename extension doesn't match the file format -- filename extension pointing to fastq validator - file format is blank - invalid file
     Given an invalid file with filename <file_name>
-    And format field set to <file_format>
+    And format field is empty
     When metadata is validated
     Then File is <validation_state> after validation
 
     Examples:
-      |           file_name |       file_format | validation_state |
-      |       file.fastq.gz |                   |          INVALID |
-      |          file.fq.gz |                   |          INVALID |
-      |          file.fastq |                   |          INVALID |
-      |   file.fastq.tar.gz |                   |          INVALID |
-      |             file.fq |                   |          INVALID |
+      |           file_name |  validation_state |
+      |       file.fastq.gz |           INVALID |
+      |          file.fq.gz |           INVALID |
+      |          file.fastq |           INVALID |
+      |   file.fastq.tar.gz |           INVALID |
+      |             file.fq |           INVALID |
 
   Scenario Outline: 2.c.1 filename extension doesn't match the file format -- filename extension pointing to no validator - file format points to fastq validator
     Given a valid file with filename <file_name>
@@ -110,7 +110,7 @@ Feature: file format validation
       |     t.pdf |        fastq |          INVALID |
       |     t.doc |           fq |          INVALID |
 
-  Scenario Outline: 2.c.2 filename extension doesn't match the file format -- both filename extension and file format point to no validator
+  Scenario Outline: 2.c.2.1 filename extension doesn't match the file format -- both filename extension and file format point to no validator
     Given a valid file with filename <file_name>
     And format field set to <file_format>
     When metadata is validated
@@ -120,8 +120,18 @@ Feature: file format validation
       | file_name | file_format | validation_state |
       |     t.bam |         txt |          INVALID |
       |     t.txt |         pdf |          INVALID |
-      |     t.pdf |             |            VALID |
-      |     t.doc |             |            VALID |
+
+
+  Scenario Outline: 2.c.2.2 filename extension doesn't match the file format -- file format is empty -- both filename extension and file format point to no validator
+    Given a valid file with filename <file_name>
+    And format field is empty
+    When metadata is validated
+    Then File is <validation_state> after validation
+
+    Examples:
+      | file_name | validation_state |
+      |     t.pdf |            VALID |
+      |     t.doc |            VALID |
 
   Scenario Outline: 3 - filename extension doesn't match the file format and file isn't uploaded yet
     Given a file with filename <file_name> which is not uploaded yet

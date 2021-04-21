@@ -13,6 +13,10 @@ class MockFileResource {
         this.fileResource['content']['file_core']['format'] = fileFormat;
     }
 
+    removeFileFormat() {
+        delete this.fileResource['content']['file_core']['format']
+    }
+
     setFileAsInvalid() {
         this.fileResource['validationJob']['validationReport'] =
             {

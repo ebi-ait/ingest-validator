@@ -42,6 +42,10 @@ Given(/^format field set to (.*)$/, function (file_format) {
     this.mockFileResource.setFileFormat(file_format);
 });
 
+Given(/^format field is empty$/, function () {
+    this.mockFileResource.removeFileFormat();
+});
+
 When(/^metadata is validated$/, function () {
     const validationImageConfigs = Object.entries(config.get("FILE_VALIDATION_IMAGES"));
 
