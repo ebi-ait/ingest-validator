@@ -158,19 +158,13 @@ class DocumentUpdateHandler implements IHandler {
                     const fileExt = fileName.substring(fileName.indexOf('.') + 1);
 
                     if (fileFormat != fileExt && fileFormat && fileExt) {
-                        const message = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
-                        const err = new ErrorReport(ErrorType.MetadataError, message, message);
-                        contentValidationReport.validationState = "INVALID";
-                        contentValidationReport.addError(err);
+                        const msg = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
+                        contentValidationReport.addError(ErrorType.MetadataError, msg, msg)
                     }
 
                     if (!doc['cloudUrl']) {
-                        // otherwise set validation state to INVALID, return error report with NoCloudUrl
                         const msg = "File cloudUrl property not set.";
-                        const err = new ErrorReport(ErrorType.FileNotUploaded, msg);
-                        err.userFriendlyMessage = "File not uploaded.";
-                        contentValidationReport.validationState = "INVALID";
-                        contentValidationReport.addError(err);
+                        contentValidationReport.addError(ErrorType.FileNotUploaded, msg, "File not uploaded.")
                     }
 
                     if (doc['cloudUrl'] && (contentValidationReport.validationState.toUpperCase() == "VALID")) {
