@@ -47,6 +47,7 @@ class IngestFileValidator {
             }
         }
         return this.uploadAreaForFile(fileResource).then(uploadAreaUuid => {
+
             const validationImage = this.imageFor(fileFormat);
             if (!validationImage) {
                 return Promise.reject(new NoFileValidationImage());

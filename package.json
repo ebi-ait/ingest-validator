@@ -6,7 +6,8 @@
   "repository": "https://github.com/ebi-ait/ingest-validator.git",
   "scripts": {
     "start": "tsc && node dist/app.js",
-    "test": "jest",
+    "test": "jest && npm run cucumber",
+    "cucumber": "tsc && cucumber-js --format @cucumber/pretty-formatter",
     "test-watch": "nodemon --exec \"npm test\""
   },
   "engines": {
@@ -40,6 +41,8 @@
     "yargs": "^12.0.5"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^7.1.0",
+    "@cucumber/pretty-formatter": "^1.0.0-alpha.0",
     "@types/amqplib": "^0.5.13",
     "@types/bluebird": "^3.5.27",
     "@types/config": "0.0.34",
@@ -50,6 +53,7 @@
     "@types/traverson": "^2.0.28",
     "cryptiles": ">=4.1.2",
     "jest": "^22.4.4",
+    "jest-mock": "^26.6.2",
     "merge": ">=1.2.1",
     "nodemon": "^1.19.1",
     "snyk": "^1.216.0",

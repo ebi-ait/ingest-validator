@@ -3,6 +3,7 @@
  */
 import ErrorReport from "./error-report";
 import {ValidationJob} from "../common/types";
+import ErrorType from "./error-type";
 
 class ValidationReport {
     validationState: string;
@@ -29,6 +30,19 @@ class ValidationReport {
     setValidationJob(job: ValidationJob): void {
         this.validationJob = job;
         this.validationJob.validationReport = this;
+    }
+
+    addErrorReport(errorReport: ErrorReport): void {
+        this.validationState = "INVALID";
+        if (!this.validationErrors || !this.validationErrors.length) {
+            this.validationErrors = [];
+        }
+        this.validationErrors.push(errorReport);
+    }
+
+    addError(errorType: ErrorType, message: string, userFriendlyMessage: string) {
+        const err = new ErrorReport(errorType, message, userFriendlyMessage);
+        this.addErrorReport(err);
     }
 }
 
