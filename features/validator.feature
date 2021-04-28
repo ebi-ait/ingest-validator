@@ -73,21 +73,21 @@ Feature: file format validation
     Given a valid file with filename <file_name>
     And format field is empty
     When metadata is validated
-    Then File is <validation_state> after validation
+    Then File is <validation_state> and has metadata and file not uploaded errors
 
     Examples:
       |           file_name | validation_state |
-      |       file.fastq.gz |            VALID |
-      |          file.fq.gz |            VALID |
-      |          file.fastq |            VALID |
-      |   file.fastq.tar.gz |            VALID |
-      |             file.fq |            VALID |
+      |       file.fastq.gz |          INVALID |
+      |          file.fq.gz |          INVALID |
+      |          file.fastq |          INVALID |
+      |   file.fastq.tar.gz |          INVALID |
+      |             file.fq |          INVALID |
 
   Scenario Outline: 2.b.3 filename extension doesn't match the file format -- filename extension pointing to fastq validator - file format is blank - invalid file
     Given an invalid file with filename <file_name>
     And format field is empty
     When metadata is validated
-    Then File is <validation_state> after validation
+    Then File is <validation_state> and has metadata and file not uploaded errors
 
     Examples:
       |           file_name |  validation_state |
@@ -126,18 +126,18 @@ Feature: file format validation
     Given a valid file with filename <file_name>
     And format field is empty
     When metadata is validated
-    Then File is <validation_state> after validation
+    Then File is <validation_state> and has metadata and file not uploaded errors
 
     Examples:
       | file_name | validation_state |
-      |     t.pdf |            VALID |
-      |     t.doc |            VALID |
+      |     t.pdf |          INVALID |
+      |     t.doc |          INVALID |
 
   Scenario Outline: 3 - filename extension doesn't match the file format and file isn't uploaded yet
     Given a file with filename <file_name> which is not uploaded yet
     And format field set to <file_format>
     When metadata is validated
-    Then File is <validation_state> and has 2 errors
+    Then File is <validation_state> and has metadata and file not uploaded errors
 
     Examples:
       |           file_name |     file_format  | validation_state |
@@ -161,7 +161,7 @@ Feature: file format validation
       |   file.fastq.tar.gz |    .fastq.tar.gz |          INVALID |
       |             file.fq |              .fq |          INVALID |
 
-  Scenario Outline: 4 - valid file whose file format is prepended by dot
+  Scenario Outline: 4 - valid file whose file format has a leading dot
     Given a valid file with filename <file_name>
     And format field set to <file_format>
     When metadata is validated

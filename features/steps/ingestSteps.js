@@ -61,8 +61,8 @@ When(/^metadata is validated$/, function () {
     const docHandler = new DocumentUpdateHandler(null, fileValidator, ingestClient);
 
     const validationReport = new ValidationReport( this.fileResource.validationState);
-    for(const err in this.fileResource.validationErrors){
-        validationReport.addError(err)
+    for(const err of this.fileResource.validationErrors){
+        validationReport.addError(err.errorType)
     }
 
     jest.spyOn(docHandler, 'attemptFileValidation').mockResolvedValue(this.fileResource.validationJob.validationReport);
@@ -76,7 +76,7 @@ Then(/^File is (.*) after validation$/, async function (validation_state) {
     });
 });
 
-Then(/^File is (.*) and has 2 errors$/, async function (validation_state) {
+Then(/^File is (.*) and has metadata and file not uploaded errors$/, async function (validation_state) {
     await this.validationReport.then(function (validationReport) {
         assert.equal(validationReport.validationState.toLowerCase(), validation_state.toLowerCase());
         assert.equal(validationReport.validationErrors.length, 2);
@@ -84,4 +84,3 @@ Then(/^File is (.*) and has 2 errors$/, async function (validation_state) {
         assert.equal(validationReport.validationErrors[0].errorType, "METADATA_ERROR");
     });
 });
-
