@@ -14,7 +14,21 @@ class MockFileResource {
     }
 
     removeFileFormat() {
-        delete this.fileResource['content']['file_core']['format']
+        delete this.fileResource['content']['file_core']['format'];
+        this.fileResource['validationErrors'] = [
+            {
+                "errorType": "METADATA_ERROR",
+                "message": "should have required property 'format'",
+                "userFriendlyMessage": "should have required property 'format' at .file_core",
+                "absoluteDataPath": ".file_core"
+            },
+            {
+                "errorType": "FILE_NOT_UPLOADED",
+                "message": "File cloudUrl property not set.",
+                "userFriendlyMessage": "File not uploaded."
+            }
+        ];
+        this.fileResource['validationState'] = 'Invalid';
     }
 
     setFileAsInvalid() {
