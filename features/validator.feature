@@ -30,6 +30,16 @@ Feature: file format validation
       |      t.bam |         bam |            VALID |
       |      t.txt |         txt |            VALID |
 
+  Scenario Outline: 1.c valid fastq file, but file format is invalid - does not point to fastq validation
+    Given a valid file with filename <file_name>
+    And format field set to <file_format>
+    When metadata is validated
+    Then File is <validation_state> after validation
+
+    Examples:
+      |   file_name | file_format | validation_state |
+      | abc.file.fq | abc.file.fq |          INVALID |
+
   Scenario Outline: 2.a.1 valid fastq file - filename extension doesn't match the file format - both point to fastq validator
     Given a valid file with filename <file_name>
     And format field set to <file_format>
@@ -147,7 +157,7 @@ Feature: file format validation
       |   file.fastq.tar.gz |    xfastq.tar.gz |          INVALID |
       |             file.fq |              xfq |          INVALID |
 
-  Scenario Outline: 4 - invalid file whose file format is prepended by dot
+  Scenario Outline: 4.a - invalid file whose file format is prepended by dot
     Given an invalid file with filename <file_name>
     And format field set to <file_format>
     When metadata is validated
@@ -161,7 +171,7 @@ Feature: file format validation
       |   file.fastq.tar.gz |    .fastq.tar.gz |          INVALID |
       |             file.fq |              .fq |          INVALID |
 
-  Scenario Outline: 4 - valid file whose file format has a leading dot
+  Scenario Outline: 4.b - valid file whose file format has a leading dot
     Given a valid file with filename <file_name>
     And format field set to <file_format>
     When metadata is validated
