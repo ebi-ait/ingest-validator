@@ -158,10 +158,8 @@ class DocumentUpdateHandler implements IHandler {
 
                     const acceptedFileFormatForValidation = Object.keys(config.get("FILE_VALIDATION_IMAGES"));
 
-                    if ((fileFormat && !fileFormat.match(/^[a-zA-Z]/))
-                        || (!fileName.endsWith(fileFormat) && fileFormat)
-                        || (fileFormat && !acceptedFileFormatForValidation.includes(fileFormat)
-                            && this.filenameMatchingFastqFilePattern(fileName, acceptedFileFormatForValidation))) {
+                    if (this.isInvalidFileExtension(fileFormat, fileName)
+                        || this.isInvalidFileFormat(fileFormat, fileName, acceptedFileFormatForValidation)) {
                         const msg = `The file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
                         contentValidationReport.addError(ErrorType.MetadataError, msg, msg)
                     }
@@ -179,6 +177,17 @@ class DocumentUpdateHandler implements IHandler {
                 });
         }
         return Promise.resolve(contentValidationReport); // return original report if not eligible for file validation
+    }
+
+    private isInvalidFileExtension(fileFormat: string, fileName: string): boolean {
+        return !!(!fileName.endsWith(fileFormat) && fileFormat);
+    }
+
+    private isInvalidFileFormat(fileFormat: string, fileName: string, acceptedFileFormatForValidation: string[]): boolean {
+        return !!(fileFormat
+                    && !acceptedFileFormatForValidation.includes(fileFormat)
+                    && this.filenameMatchingFastqFilePattern(fileName, acceptedFileFormatForValidation)
+        );
     }
 
     private filenameMatchingFastqFilePattern(fileName: string, fastqFormat: string[]): boolean {
