@@ -21,6 +21,7 @@ import {FileValidationRequestFailed} from "../../utils/upload-client/upload-clie
 import ValidationReport from "../../model/validation-report";
 import ErrorReport from "../../model/error-report";
 import ErrorType from "../../model/error-type";
+import config from "config";
 
 class DocumentUpdateHandler implements IHandler {
     validator: IngestValidator;
@@ -155,10 +156,11 @@ class DocumentUpdateHandler implements IHandler {
                     const fileName = doc['fileName'];
                     const fileFormat = doc['content']['file_core']['format'];
 
-                    const fileExt = fileName.substring(fileName.indexOf('.') + 1);
+                    const acceptedFileFormatForValidation = Object.keys(config.get("FILE_VALIDATION_IMAGES"));
 
-                    if (fileFormat != fileExt && fileFormat && fileExt) {
-                        const msg = `The file extension, ${fileExt}, of the file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
+                    if (this.isInvalidFileExtension(fileFormat, fileName)
+                        || this.isInvalidFileFormat(fileFormat, fileName, acceptedFileFormatForValidation)) {
+                        const msg = `The file with filename, "${fileName}", doesn't match the file format, "${fileFormat}", in the metadata.`;
                         contentValidationReport.addError(ErrorType.MetadataError, msg, msg)
                     }
 
@@ -175,6 +177,29 @@ class DocumentUpdateHandler implements IHandler {
                 });
         }
         return Promise.resolve(contentValidationReport); // return original report if not eligible for file validation
+    }
+
+    private isInvalidFileExtension(fileFormat: string, fileName: string): boolean {
+        return !!(!fileName.endsWith(fileFormat) && fileFormat);
+    }
+
+    private isInvalidFileFormat(fileFormat: string, fileName: string, acceptedFileFormatForValidation: string[]): boolean {
+        return !!(fileFormat
+                    && !acceptedFileFormatForValidation.includes(fileFormat)
+                    && this.filenameMatchingFastqFilePattern(fileName, acceptedFileFormatForValidation)
+        );
+    }
+
+    private filenameMatchingFastqFilePattern(fileName: string, fastqFormat: string[]): boolean {
+        let isMatch = false;
+        for (let extension of fastqFormat) {
+            if (fileName.endsWith(extension)) {
+                isMatch = true;
+                break;
+            }
+        }
+
+        return isMatch;
     }
 
 

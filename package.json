@@ -1,6 +1,6 @@
 {
   "name": "ingest-validator",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Ingest validator implementation in node using ajv based on https://github.com/HumanCellAtlas/ingest-validator.git which is in turn based on https://github.com/EMBL-EBI-SUBS/json-schema-validator.git.",
   "main": "dist/app.js",
   "repository": "https://github.com/ebi-ait/ingest-validator.git",
