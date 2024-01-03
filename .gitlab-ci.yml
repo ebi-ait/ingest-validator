@@ -2,7 +2,7 @@ include:
   remote: 'https://raw.githubusercontent.com/ebi-ait/gitlab-ci-templates/master/build-release-deploy.yml'
 
 Unit Test:
-  environment:
+  variables:
     INGEST_SCHEME: https
     INGEST_HOST: api.ingest.dev.archive.data.humancellatlas.org
     INGEST_PORT: 443
