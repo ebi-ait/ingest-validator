@@ -6,7 +6,13 @@ Unit Test:
     INGEST_SCHEME: https
     INGEST_HOST: api.ingest.dev.archive.data.humancellatlas.org
     INGEST_PORT: 443
+    INGEST_API_JWT_AUDIENCE: https://dev.data.humancellatlas.org
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
+  before_script:
+    - export DEPLOYMENT_ENV=$CI_COMMIT_REF_NAME
+    - export DEPLOYMENT_STAGE=${DEPLOYMENT_ENV}
+    - aws secretsmanager get-secret-value --region us-east-1 --secret-id ingest/${DEPLOYMENT_ENV}/gcp-credentials.json | jq -r .SecretString > $(pwd -P)/gcp-credentials.json
+    - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd -P)/gcp-credentials.json
   script:
     - npm install
     - npm run test
