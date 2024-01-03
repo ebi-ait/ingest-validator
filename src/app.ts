@@ -36,8 +36,7 @@ const schemaValidator = (() => {
 })();
 
 const ingestClient = (() => {
-    const ingestConnectionConfig = config.get("INGEST_API.connection") as IngestConnectionProperties;
-    return new IngestClient(ingestConnectionConfig);
+    return IngestClient.fromConfig()
 })();
 
 const uploadClient = (() => {

@@ -33,7 +33,9 @@
       "host" : "localhost",
       "port" : 8080
     },
-    "maxConnections": 20
+    "maxConnections": 20,
+    "applicationCredentials": ".secrets/gcp_credentials",
+    "jwtAudience": "https://dev.data.humancellatlas.org/"
   },
   "UPLOAD_API" : {
     "connection" : {
@@ -46,7 +48,7 @@
   "OLS_API" : {
     "connection" : {
       "scheme": "http",
-      "host" : "ontology.dev.data.humancellatlas.org",
+      "host" : "ontology.archive.data.humancellatlas.org",
       "port" : 80
     }
   },

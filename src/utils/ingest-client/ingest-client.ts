@@ -18,6 +18,7 @@ import ValidationReport from "../../model/validation-report";
 import {StatusCodeError} from "request-promise/errors";
 import {RejectMessageException} from "../../listener/messging-exceptions";
 import {Client} from "../client";
+import {TokenManager} from "./token-manager";
 
 
 request.defaults({
@@ -29,18 +30,32 @@ request.defaults({
 
 
 class IngestClient extends Client {
+    private tokenManager: TokenManager;
 
-    constructor(connectionConfig: IngestConnectionProperties) {
+    constructor(connectionConfig: IngestConnectionProperties, applicationCredentials: string, jwtAudience:string) {
         const ingestUrl = `${connectionConfig.scheme}://${connectionConfig.host}:${connectionConfig.port}`;
         super(ingestUrl);
+        this.tokenManager = new TokenManager(applicationCredentials, jwtAudience);
     }
-    
+
+     static fromConfig() {
+        const ingestConnectionConfig = config.get("INGEST_API.connection") as IngestConnectionProperties;
+        const applicationCredentials = config.get("INGEST_API.applicationCredentials") as string
+        const jwtAudience = config.get("INGEST_API.jwtAudience") as string
+        return new IngestClient(ingestConnectionConfig, applicationCredentials, jwtAudience);
+    }
     retrieve(entityUrl: string) : Promise<any>{
+        const token = this.tokenManager.getToken();
+
+
         return new Promise((resolve, reject) => {
             const options = {
                 method: "GET",
-                url: entityUrl,
+                url: this.clientBaseUrl+entityUrl,
                 json: true,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
             };
             request(options)
             .then(resp => resolve(resp))
@@ -251,6 +266,7 @@ class IngestClient extends Client {
     static pathExistsInDoc(path: string[], doc: any) : boolean {
         return !!R.path(path, doc);
     }
+
 }
 
 export default IngestClient;

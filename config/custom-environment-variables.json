@@ -19,7 +19,9 @@
       "host" : "INGEST_HOST",
       "port" : "INGEST_PORT"
     },
-    "maxConnections": "INGEST_MAX_CONNECTIONS"
+    "maxConnections": "INGEST_MAX_CONNECTIONS",
+    "applicationCredentials": "GOOGLE_APPLICATION_CREDENTIALS",
+    "jwt_audience": "INGEST_API_JWT_AUDIENCE"
   },
   "UPLOAD_API" : {
     "connection" : {

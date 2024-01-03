@@ -39,15 +39,44 @@ node -v
 npm -v
 ```
 
+### secret for ingest api access
+The validator needs authenticated access to API. It therefore needs to acquire the token from the service account similarly to the system tests and graph validation.
+
+```
+mkdir _local
+```
+* The GCP credentials are stored in AWS Secrets Manager; To download GCP credentials and save it into a file, the AWS CLI can be used:
+
+```bash
+read -p "enter environment [dev,prod]" DEPLOYMENT_ENV
+mkdir -p ~/.secrets
+chmod 700 ~/.secrets
+aws secretsmanager get-secret-value \
+  --profile embl-ebi \
+  --region us-east-1 \
+  --secret-id ingest/${DEPLOYMENT_ENV}/gcp-credentials.json | jq -r .SecretString > ~/.secrets/gcp-credentials-${DEPLOYMENT_ENV}.json
+# replace /Users with the home directory location in your env
+export GOOGLE_APPLICATION_CREDENTIALS=/Users/$USER/.secrets/gcp-credentials-${DEPLOYMENT_ENV}.json
+export INGEST_API_JWT_AUDIENCE=https://dev.data.humancellatlas.org/
+```
+
+
 #### Project
 Clone project and install dependencies:
 ```
-git clone https://github.com/EMBL-EBI-SUBS/json-schema-validator.git
-cd json-schema-validator
+git clone https://github.com/ebi-ait/ingest-validator.git
+cd ingest-validator
 npm install
 ```
 
 ### Running the Tests
+setup you local environments by defining the environment variables in the `.env` file.
+The possible configuration environments are:
+- GOOGLE_APPLICATION_CREDENTIALS: a json file with the service account details
+- INGEST_SCHEME: http/https
+- INGEST_HOST
+- INGEST_PORT
+./config/custom-environment-variables.json 
 ```
 npm test
 ```
@@ -58,9 +87,20 @@ node src/server
 ```
 The node server will run on port **3020** and will expose one endpoint: **/validate**.
 
+#### Environment configuration
+
+The validator connects to other ingest services, e.g. ingest core api, ols api, fastq validation images, whose values 
+are given in environment variables. The environment variables used are in the 
+file [./config/custom-environment-variables.json](./config/custom-environment-variables.json).
+The configuration process is done by the [config package](https://github.com/node-config/node-config/wiki/Environment-Variables#custom-environment-variables).
+
+
+
+
 #### Startup arguments
 
 - logPath
+
 
 If provided with a log path argument, the application will write the logs to a file on the specified directory with a 24h rotation. To provide the log path add a `logPath` property after the startup statement:
 ```
@@ -96,7 +136,7 @@ This validator exposes two endpoints that will accept POST requests: `/validate`
 
 ### /validate
 The endpoint will expect the body to have the following structure:
-```js
+```json
 {
   "schema": {},
   "object": {}
@@ -105,7 +145,7 @@ The endpoint will expect the body to have the following structure:
 Where the schema should be a valid json schema to validate the object against.
 
 **Example:** 
-```js
+```json
 {
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -141,7 +181,7 @@ Where the schema should be a valid json schema to validate the object against.
 
 ### /validateRefs
 The endpoint will expect the body to have the following structure:
-```js
+```json
 {
   "schemas": [],
   "entity": {},
@@ -149,7 +189,7 @@ The endpoint will expect the body to have the following structure:
 }
 ```
 **Example:** 
-```js
+```json
 {
   "schemas": 
   [{
@@ -189,13 +229,13 @@ The endpoint will expect the body to have the following structure:
 Response with no validation errors:
 
 HTTP status code `200`
-```js
+```json
 []
 ```
 An example of a validation response with errors:
 
 HTTP status code `200`
-```js
+```json
 [
   {
     "errors": [
@@ -220,7 +260,7 @@ Sending malformed JSON or a body with either the schema or the submittable missi
 - When sending malformed JSON:
 
   HTTP status code `400` - Bad Request
-  ```js
+  ```json
   {
     "errors": "Malformed JSON please check your request body."
   }
@@ -228,7 +268,7 @@ Sending malformed JSON or a body with either the schema or the submittable missi
 - When any of the required body values is missing:
 
   HTTP status code `422` - Unprocessable Entity
-  ```js
+  ```json
   {
     "errors": {
       "schema": {
@@ -260,7 +300,7 @@ Being an async validation step, whenever used is a schema, the schema must have 
 
 #### Usage
 Schema:
-```js
+```json
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://schema.dev.data.humancellatlas.org/module/ontology/5.3.0/organ_ontology",
@@ -281,7 +321,7 @@ Schema:
 }
 ```
 JSON object:
-```js
+```json
 {
     "ontology": "UBERON:0000955"
 }
@@ -297,7 +337,7 @@ Being an async validation step, whenever used is a schema, the schema must have 
 
 #### Usage
 Schema:
-```js
+```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$async": true,
@@ -314,7 +354,7 @@ Schema:
 }
 ```
 JSON object:
-```js
+```json
 {
   "term": "http://purl.obolibrary.org/obo/PATO_0000383"
 }
@@ -328,7 +368,7 @@ Being an async validation step, whenever used is a schema, the schema must have 
 
 #### Usage
 Schema:
-```js
+```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$async": true,
@@ -343,7 +383,7 @@ Schema:
 }
 ```
 JSON object:
-```js
+```json
 {
   "url": "http://purl.obolibrary.org/obo/PATO_0000383"
 }
