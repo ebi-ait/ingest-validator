@@ -1,34 +1,19 @@
 include:
   remote: 'https://raw.githubusercontent.com/ebi-ait/gitlab-ci-templates/master/build-release-deploy.yml'
 
-.test_validator: &test_validator
-  stage: test
+Unit Test:
   variables:
     INGEST_SCHEME: https
+    INGEST_HOST: api.ingest.dev.archive.data.humancellatlas.org
     INGEST_PORT: 443
     INGEST_API_JWT_AUDIENCE: https://dev.data.humancellatlas.org
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
   before_script:
     - apt-get install -y jq awscli
+    - export DEPLOYMENT_ENV=$CI_COMMIT_REF_NAME
     - export DEPLOYMENT_STAGE=${DEPLOYMENT_ENV}
     - aws secretsmanager get-secret-value --region us-east-1 --secret-id ingest/${DEPLOYMENT_ENV}/gcp-credentials.json | jq -r .SecretString > $(pwd -P)/gcp-credentials.json
     - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd -P)/gcp-credentials.json
   script:
     - npm install
     - npm run test
-
-Test dev:
-  only:
-    - dev
-  variables:
-    DEPLOYMENT_ENV: dev
-    INGEST_HOST: api.ingest.dev.archive.data.humancellatlas.org
-  <<: *test_validator
-
-Test staging:
-  only:
-    - master
-  variables:
-    DEPLOYMENT_ENV: staging
-    INGEST_HOST: api.ingest.dev.archive.data.humancellatlas.org
-  <<: *test_validator
