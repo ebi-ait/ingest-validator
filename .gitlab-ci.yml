@@ -9,6 +9,7 @@ Unit Test:
     INGEST_API_JWT_AUDIENCE: https://dev.data.humancellatlas.org
   image: quay.io/ebi-ait/ingest-base-images:node_carbon
   before_script:
+    - apt-get update
     - apt-get install -y jq awscli
     - export DEPLOYMENT_ENV=$CI_COMMIT_REF_NAME
     - export DEPLOYMENT_STAGE=${DEPLOYMENT_ENV}
