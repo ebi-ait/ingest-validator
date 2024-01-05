@@ -10,8 +10,13 @@ export class TokenManager {
     private token: string | null = null;
     accountCredentials: GcpServiceAccountCredentials;
     private audience: string;
-    constructor(keyFilePath:string, audience:string) {
-        const data = fs.readFileSync(keyFilePath, 'utf8');
+    constructor(applicationCredentials:string, audience:string) {
+        let data = "";
+        if (fs.existsSync(applicationCredentials)) {
+            data = fs.readFileSync(applicationCredentials, 'utf8');
+        } else {
+            data = applicationCredentials
+        }
         this.accountCredentials = JSON.parse(data) as GcpServiceAccountCredentials;
         this.audience = audience;
 
