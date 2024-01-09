@@ -47,7 +47,7 @@ class IngestClient extends Client {
     retrieve(entityUrl: string) : Promise<any>{
         const token = this.tokenManager.getToken();
 
-
+        console.info(`retrieving url: ${entityUrl}`)
         return new Promise((resolve, reject) => {
             const options = {
                 method: "GET",
@@ -58,8 +58,14 @@ class IngestClient extends Client {
                 },
             };
             request(options)
-            .then(resp => resolve(resp))
-            .catch(err => reject(err));
+            .then(resp => {
+                console.info(`retrieving url succeeded: ${entityUrl}`)
+                resolve(resp);
+            })
+            .catch(err => {
+                console.error(`retrieving url failed: ${entityUrl}: ${err.toString()}`)
+                reject(err);
+            });
         });
     }
 
