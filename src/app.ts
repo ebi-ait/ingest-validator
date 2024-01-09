@@ -9,7 +9,6 @@ import FileValidationListener from "./listener/file-validation-listener";
 import IngestFileValidator from "./utils/ingest-client/ingest-file-validator";
 import {
     FileValidationImage,
-    IngestConnectionProperties,
     RabbitConnectionProperties,
     RabbitMessagingProperties,
     UploadApiConnectionProperties
@@ -28,13 +27,11 @@ const dnscache = require('dnscache')({
     "cachesize" : 1000
 });
 
-/** ------------------------------- **/
 
 const schemaValidator = (() => {
     const ontologyValidatorKeyword = new GraphRestriction("graph_restriction");
     return new SchemaValidator([ontologyValidatorKeyword]);
 })();
-
 const ingestClient = (() => {
     return IngestClient.fromConfig()
 })();

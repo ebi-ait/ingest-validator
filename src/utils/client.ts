@@ -12,6 +12,7 @@ export class Client {
 
     constructor(baseUrl: string, apiKey?: string) {
         this.clientBaseUrl = baseUrl;
+        console.log(`setting up a client with url ${this.clientBaseUrl}`);
         this.clientApiKey = apiKey;
     }
 

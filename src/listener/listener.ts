@@ -23,6 +23,7 @@ class Listener {
     }
 
     start(){
+        console.log(`listening ${this.rabbitConnectionProperties.scheme}://${this.rabbitConnectionProperties.host}:${this.rabbitConnectionProperties.port}`);
         amqp.connect(String(this.rabbitUrl)).then((conn) => {
             return conn.createChannel();
         }).then(ch => {
@@ -36,18 +37,18 @@ class Listener {
                                         if(success) {
                                             ch.ack(msg!);
                                         } else {
-                                            console.info(`Failed to process message: \n ${msg!.content}`);
+                                            console.error(`Failed to process message: ${msg!.content}`);
                                             ch.nack(msg!, false, false);
                                         }
                                     }).catch(RejectMessageException, err => {
-                                        console.info(`Logging unretryable error: \n ${err.stack} \n ..for message: ${msg!.content}`);
+                                        console.error(`Logging unretryable error: ${err.stack} \n ..for message: ${msg!.content}`);
                                         ch.nack(msg!, false, false);
                                     }).catch(Error, err => {
-                                        console.error(`Logging unexpected error: \n ${err.stack} \n ..for message: ${msg!.content}`);
+                                        console.error(`Logging unexpected error: ${err.stack} \n ..for message: ${msg!.content}`);
                                         ch.ack(msg!);
                                     });
                                 } catch (e) {
-                                    console.error(`Logging unexpected exception: \n ${e.stack} \n ..for message: ${msg!.content}`);
+                                    console.error(`Logging unexpected exception: ${e.stack} \n ..for message: ${msg!.content}`);
                                     ch.ack(msg!)
                                 }
                             }, {noAck : false});
@@ -56,7 +57,9 @@ class Listener {
                 })
             })
 
-        })
+        }).catch((error) => {
+            console.error('Error starting listener:', error.message);
+        });
     }
 
     setHandler(handler: IHandler) {
