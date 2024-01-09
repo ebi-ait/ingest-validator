@@ -41,7 +41,7 @@ class DocumentUpdateHandler implements IHandler {
                 return Promise.resolve(true)
             })
             .catch((err) => {
-                console.error(`Caught an unhandled exception, message will be ignored. Error: ${err.toString()}, Message: ${msg}`)
+                console.error(`Caught an unhandled exception, message will be ignored. Error: ${err.toString()}, Message: ${msg}. Stack: ${err.stack}`)
                 return Promise.resolve(false)
             });
     }
