@@ -6,12 +6,11 @@ import request from "request-promise";
 import R from "ramda";
 import Promise from "bluebird";
 import {
-    NoUuidError,
+    AlreadyInStateError,
+    LinkNotFoundOnResource,
     NoContentError,
     NotRetryableError,
-    LinkNotFoundOnResource,
-    AlreadyInStateError,
-    EntityNotFoundError
+    NoUuidError
 } from "./ingest-client-exceptions";
 import {FileChecksums, IngestConnectionProperties, ValidationJob} from "../../common/types";
 import ValidationReport from "../../model/validation-report";
@@ -32,47 +31,49 @@ request.defaults({
 class IngestClient extends Client {
     private tokenManager: TokenManager;
 
-    constructor(connectionConfig: IngestConnectionProperties, applicationCredentials: string, jwtAudience:string) {
+    constructor(connectionConfig: IngestConnectionProperties, applicationCredentials: string, jwtAudience: string) {
         const ingestUrl = `${connectionConfig.scheme}://${connectionConfig.host}:${connectionConfig.port}`;
         super(ingestUrl);
         this.tokenManager = new TokenManager(applicationCredentials, jwtAudience);
     }
 
-     static fromConfig() {
+    static fromConfig() {
         const ingestConnectionConfig = config.get("INGEST_API.connection") as IngestConnectionProperties;
         const applicationCredentials = config.get("INGEST_API.applicationCredentials") as string
         const jwtAudience = config.get("INGEST_API.jwtAudience") as string
         return new IngestClient(ingestConnectionConfig, applicationCredentials, jwtAudience);
     }
-    retrieve(entityUrl: string) : Promise<any>{
+
+    retrieve(entityUrl: string): Promise<any> {
         const token = this.tokenManager.getToken();
 
-        console.info(`retrieving url: ${entityUrl}`)
+
         return new Promise((resolve, reject) => {
             const options = {
                 method: "GET",
-                url: this.clientBaseUrl+entityUrl,
+                url: entityUrl,
                 json: true,
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
             };
+            console.info(`retrieving url: ${options.method} ${entityUrl}`)
             request(options)
-            .then(resp => {
-                console.info(`retrieving url succeeded: ${entityUrl}`)
-                resolve(resp);
-            })
-            .catch(err => {
-                console.error(`retrieving url failed: ${entityUrl}: ${err.toString()}`)
-                reject(err);
-            });
+                .then(resp => {
+                    console.info(`retrieving url succeeded: ${options.method} ${entityUrl}`)
+                    resolve(resp);
+                })
+                .catch(err => {
+                    console.error(`retrieving url failed: ${options.method} ${entityUrl}: ${err.toString()}`)
+                    reject(err);
+                });
         });
     }
 
-    retrieveEmbeddedEntities(entityUrl: string, entityLink: string, entityType: string) : Promise<any[]> {
+    retrieveEmbeddedEntities(entityUrl: string, entityLink: string, entityType: string): Promise<any[]> {
         return this.retrieve(entityUrl)
             .then(doc => {
-                if(! IngestClient.pathExistsInDoc(["_links", entityLink], doc)) {
+                if (!IngestClient.pathExistsInDoc(["_links", entityLink], doc)) {
                     return Promise.reject(new LinkNotFoundOnResource(`Error: Resource at ${entityUrl} has no link "${entityLink}"`));
                 } else {
                     return this.retrieve(doc["_links"][entityLink]["href"]).then(embeddedEntites => {
@@ -83,7 +84,7 @@ class IngestClient extends Client {
     }
 
 
-    retrieveMetadataDocument(entityUrl: string) : Promise<any>{
+    retrieveMetadataDocument(entityUrl: string): Promise<any> {
         return this.retrieve(entityUrl);
     }
 
@@ -96,42 +97,42 @@ class IngestClient extends Client {
      */
     getMetadataDocument(entityUrl: string): Promise<any> {
         return this.retrieveMetadataDocument(entityUrl).then((doc: any) => {
-            if(!(doc["uuid"] && doc["uuid"]["uuid"])) {
+            if (!(doc["uuid"] && doc["uuid"]["uuid"])) {
                 return Promise.reject(new NoUuidError("document at " + entityUrl + "has no UUID"));
             }
-            if(!doc['content']) {
+            if (!doc['content']) {
                 return Promise.reject(new NoContentError())
             }
             return Promise.resolve(doc)
         })
     }
 
-    transitionDocumentState(...args: any[]) : Promise<any> {
+    transitionDocumentState(...args: any[]): Promise<any> {
         return this.retry(5, this._transitionDocumentState.bind(this), args, "Retrying transitionDocumentState()")
     }
 
-    _transitionDocumentState(entityUrl: string, validationState: string) : Promise<any> {
+    _transitionDocumentState(entityUrl: string, validationState: string): Promise<any> {
         return new Promise((resolve, reject) => {
             this.retrieveMetadataDocument(entityUrl).then((doc: any) => {
-                    if(doc['validationState'].toUpperCase() === validationState.toUpperCase()) {
-                        reject(new AlreadyInStateError("Failed to transition document; document was already in the target state"));
-                    } else {
-                        if(doc["_links"][validationState.toLowerCase()]) {
-                            const options = {
-                                method: "PUT",
-                                url: doc["_links"][validationState.toLowerCase()]["href"],
-                                body: {},
-                                json: true
-                            };
-                            request(options)
+                if (doc['validationState'].toUpperCase() === validationState.toUpperCase()) {
+                    reject(new AlreadyInStateError("Failed to transition document; document was already in the target state"));
+                } else {
+                    if (doc["_links"][validationState.toLowerCase()]) {
+                        const options = {
+                            method: "PUT",
+                            url: doc["_links"][validationState.toLowerCase()]["href"],
+                            body: {},
+                            json: true
+                        };
+                        request(options)
                             .then(resp => resolve(resp))
                             .catch(err => reject(err));
-                        } else {
-                            reject(new NotRetryableError(`Failed to transition document; document in state ${doc['validationState']} cannot enter state ${validationState}`));
-                        }
+                    } else {
+                        reject(new NotRetryableError(`Failed to transition document; document in state ${doc['validationState']} cannot enter state ${validationState}`));
                     }
-                }).catch(err => {
-                    reject(err);
+                }
+            }).catch(err => {
+                reject(err);
             });
         });
     }
@@ -142,7 +143,7 @@ class IngestClient extends Client {
 
     _setValidationErrors(entityUrl: string, validationErrors: any[]) {
         const patchPayload = {
-            "validationErrors" : validationErrors
+            "validationErrors": validationErrors
         };
 
         return new Promise((resolve, reject) => {
@@ -153,8 +154,8 @@ class IngestClient extends Client {
                 body: patchPayload,
             };
             request(options)
-            .then(resp => resolve(resp))
-            .catch(err => reject(err));
+                .then(resp => resolve(resp))
+                .catch(err => reject(err));
         });
     }
 
@@ -169,23 +170,27 @@ class IngestClient extends Client {
         return request(options);
     }
 
-    postValidationReport(entityUrl: string, validationReport: ValidationReport) : Promise<any>{
-        if(! validationReport || ! validationReport.validationState) {
+    postValidationReport(entityUrl: string, validationReport: ValidationReport): Promise<any> {
+        if (!validationReport || !validationReport.validationState) {
             console.info("Broken validation report");
         }
 
-        if(validationReport.validationState.toUpperCase() === 'VALID') {
+        if (validationReport.validationState.toUpperCase() === 'VALID') {
             console.info(`Posting a valid report for document ${entityUrl}`);
         }
 
-        return  this.transitionDocumentState(entityUrl, validationReport.validationState)
-                    .then(() => { return this.setValidationErrorsAndJob(entityUrl, validationReport)})
-                    .catch(AlreadyInStateError, err => { return this.setValidationErrorsAndJob(entityUrl, validationReport)});
+        return this.transitionDocumentState(entityUrl, validationReport.validationState)
+            .then(() => {
+                return this.setValidationErrorsAndJob(entityUrl, validationReport)
+            })
+            .catch(AlreadyInStateError, err => {
+                return this.setValidationErrorsAndJob(entityUrl, validationReport)
+            });
     }
 
-    setValidationErrorsAndJob(entityUrl: string, validationReport: ValidationReport) : Promise<any> {
+    setValidationErrorsAndJob(entityUrl: string, validationReport: ValidationReport): Promise<any> {
         return this.setValidationErrors(entityUrl, validationReport.validationErrors).then((resp: any) => {
-            if(validationReport.validationJob) {
+            if (validationReport.validationJob) {
                 return Promise.resolve(this.reportValidationJob(entityUrl, validationReport.validationJob));
             } else {
                 return Promise.resolve(resp);
@@ -193,7 +198,7 @@ class IngestClient extends Client {
         });
     }
 
-    fetchSchema(schemaUrl: string) : Promise<any> {
+    fetchSchema(schemaUrl: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             const options = {
                 method: "GET",
@@ -201,8 +206,8 @@ class IngestClient extends Client {
                 json: true,
             };
             request(options)
-            .then(resp => resolve(resp))
-            .catch(err => reject(err));
+                .then(resp => resolve(resp))
+                .catch(err => reject(err));
         });
     }
 
@@ -222,7 +227,7 @@ class IngestClient extends Client {
      * gets envelopes associated with this metadata document
      * @param metadataDocument
      */
-    envelopeForMetadataDocument(metadataDocument: any) : Promise<any> {
+    envelopeForMetadataDocument(metadataDocument: any): Promise<any> {
         return new Promise((resolve, reject) => {
             const options = {
                 method: "GET",
@@ -230,7 +235,7 @@ class IngestClient extends Client {
                 json: true,
             };
             request(options).then(resp => resolve(resp)) // envelopes are embedded entities
-            .catch(err => reject(err));
+                .catch(err => reject(err));
         });
     }
 
@@ -248,28 +253,32 @@ class IngestClient extends Client {
             json: true,
         };
         return request(options)
-        .catch(StatusCodeError, error => {
-            if(error.statusCode == 409) {
-                return Promise.reject(new RejectMessageException())
-            } else {
-                return Promise.reject(error);
-            }
-        });
+            .catch(StatusCodeError, error => {
+                if (error.statusCode == 409) {
+                    return Promise.reject(new RejectMessageException())
+                } else {
+                    return Promise.reject(error);
+                }
+            });
     }
 
-    getFileChecksums(fileDocumentUrl: string) : Promise<FileChecksums> {
+    getFileChecksums(fileDocumentUrl: string): Promise<FileChecksums> {
         return this
             .retrieveMetadataDocument(fileDocumentUrl)
-            .then(fileResource => {return Promise.resolve(fileResource["checksums"] as FileChecksums)});
+            .then(fileResource => {
+                return Promise.resolve(fileResource["checksums"] as FileChecksums)
+            });
     }
 
-    getValidationJob(fileDocumentUrl: string) : Promise<ValidationJob> {
+    getValidationJob(fileDocumentUrl: string): Promise<ValidationJob> {
         return this
             .retrieveMetadataDocument(fileDocumentUrl)
-            .then(fileResource => {return Promise.resolve(fileResource["validationJob"] as ValidationJob)});
+            .then(fileResource => {
+                return Promise.resolve(fileResource["validationJob"] as ValidationJob)
+            });
     }
 
-    static pathExistsInDoc(path: string[], doc: any) : boolean {
+    static pathExistsInDoc(path: string[], doc: any): boolean {
         return !!R.path(path, doc);
     }
 
