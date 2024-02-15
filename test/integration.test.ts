@@ -15,7 +15,7 @@ describe('Integration Tests', () => {
     it('should get all projects', async () => {
         try {
             const ingestClient = IngestClient.fromConfig();
-            const projects = await ingestClient.retrieve('/projects');
+            const projects = await ingestClient.retrieve(`${baseURL}/projects`);
             expect(projects).toHaveProperty("page", )
             expect(projects).toHaveProperty("_embedded")
             expect(projects._embedded).toHaveProperty("projects")
