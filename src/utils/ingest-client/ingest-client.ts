@@ -45,16 +45,13 @@ class IngestClient extends Client {
     }
 
     retrieve(entityUrl: string): Promise<any> {
-        const token = this.tokenManager.getToken();
-
-
         return new Promise((resolve, reject) => {
             const options = {
                 method: "GET",
                 url: entityUrl,
                 json: true,
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${(this.tokenManager.getToken())}`
                 },
             };
             console.info(`retrieving url: ${options.method} ${entityUrl}`)
@@ -122,7 +119,10 @@ class IngestClient extends Client {
                             method: "PUT",
                             url: doc["_links"][validationState.toLowerCase()]["href"],
                             body: {},
-                            json: true
+                            json: true,
+                            headers: {
+                                Authorization: `Bearer ${(this.tokenManager.getToken())}`
+                            }
                         };
                         request(options)
                             .then(resp => resolve(resp))
@@ -152,6 +152,9 @@ class IngestClient extends Client {
                 url: entityUrl,
                 json: true,
                 body: patchPayload,
+                headers: {
+                    Authorization: `Bearer ${(this.tokenManager.getToken())}`
+                }
             };
             request(options)
                 .then(resp => resolve(resp))
@@ -166,6 +169,9 @@ class IngestClient extends Client {
             method: "GET",
             url: findByValidationUrl,
             json: true,
+            headers: {
+                Authorization: `Bearer ${(this.tokenManager.getToken())}`
+            }
         };
         return request(options);
     }
@@ -204,6 +210,9 @@ class IngestClient extends Client {
                 method: "GET",
                 url: schemaUrl,
                 json: true,
+                headers: {
+                    Authorization: `Bearer ${(this.tokenManager.getToken())}`
+                }
             };
             request(options)
                 .then(resp => resolve(resp))
@@ -233,6 +242,9 @@ class IngestClient extends Client {
                 method: "GET",
                 url: this.envelopeLinkForResource(metadataDocument),
                 json: true,
+                headers: {
+                    Authorization: `Bearer ${(this.tokenManager.getToken())}`
+                }
             };
             request(options).then(resp => resolve(resp)) // envelopes are embedded entities
                 .catch(err => reject(err));
@@ -251,6 +263,9 @@ class IngestClient extends Client {
                 "validationJob": validationJob
             },
             json: true,
+            headers: {
+                Authorization: `Bearer ${(this.tokenManager.getToken())}`
+            }
         };
         return request(options)
             .catch(StatusCodeError, error => {
