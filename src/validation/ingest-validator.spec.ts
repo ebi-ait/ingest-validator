@@ -41,4 +41,26 @@ describe("Ingest validator tests", () =>{
                 expect(rep.validationState).toBe("INVALID");
             })
     });
+
+    it("should return an INVALID ValidationReport when describedBy schema can't be retrieved", () => {
+        const mockSchemaValidator: TypeMoq.IMock<SchemaValidator> = TypeMoq.Mock.ofType<SchemaValidator>();
+        const mockIngestClient: TypeMoq.IMock<IngestClient> = TypeMoq.Mock.ofType<IngestClient>();
+
+        const badUrl = "badUrl";
+        mockIngestClient
+            .setup(mockInstance => mockInstance.fetchSchema(TypeMoq.It.isValue(badUrl)))
+            .returns(() => Promise.reject(new Error()));
+
+        const ingestValidator = new IngestValidator(mockSchemaValidator.object, mockIngestClient.object);
+        const documentErroneousDescribedBy: object = {
+            "content": {
+                "describedBy": "badUrl"
+            }
+        };
+
+        ingestValidator.validate(documentErroneousDescribedBy, "someDocumentType")
+            .then((rep: ValidationReport) => {
+                expect(rep.validationState).toBe("INVALID");
+            })
+    });
 });
