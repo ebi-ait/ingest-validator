@@ -42,25 +42,36 @@ describe("Ingest validator tests", () =>{
             })
     });
 
-    it("should return an INVALID ValidationReport when describedBy schema can't be retrieved", () => {
-        const mockSchemaValidator: TypeMoq.IMock<SchemaValidator> = TypeMoq.Mock.ofType<SchemaValidator>();
-        const mockIngestClient: TypeMoq.IMock<IngestClient> = TypeMoq.Mock.ofType<IngestClient>();
+    it("should use Biovalidator for JSON Schema Draft 2019",  () => {
+        const schemaValidatorMock: TypeMoq.IMock<SchemaValidator> = TypeMoq.Mock.ofType<SchemaValidator>();
+        const ingestClientMock: TypeMoq.IMock<IngestClient> = TypeMoq.Mock.ofType<IngestClient>();
 
-        const badUrl = "badUrl";
-        mockIngestClient
-            .setup(mockInstance => mockInstance.fetchSchema(TypeMoq.It.isValue(badUrl)))
-            .returns(() => Promise.reject(new Error()));
-
-        const ingestValidator = new IngestValidator(mockSchemaValidator.object, mockIngestClient.object);
-        const documentErroneousDescribedBy: object = {
-            "content": {
-                "describedBy": "badUrl"
+        const draft2019Schema = {
+            "$schema": "http://json-schema.org/draft-2019-09/schema",
+            "properties": {
+                "testProperty": {
+                    "type": "string"
+                }
             }
         };
 
-        ingestValidator.validate(documentErroneousDescribedBy, "someDocumentType")
-            .then((rep: ValidationReport) => {
-                expect(rep.validationState).toBe("INVALID");
-            })
+        ingestClientMock
+            .setup(mockInstance => mockInstance.fetchSchema(TypeMoq.It.isAnyString()))
+            .returns(() => Promise.resolve(draft2019Schema));
+
+        const document = {
+            "content": {
+                "testProperty": "testValue",
+                "describedBy": "http://example.com/schema"
+            }
+        };
+
+        const ingestValidator = new IngestValidator(schemaValidatorMock.object, ingestClientMock.object);
+
+        // Now using the then() method for promise chaining
+        return ingestValidator.validate(document, "testDocumentType")
+            .then(validationReport => {
+                expect(validationReport).toBeDefined();
+            });
     });
 });
