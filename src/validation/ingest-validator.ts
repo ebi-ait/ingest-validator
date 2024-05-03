@@ -8,7 +8,7 @@ import IngestClient from "../utils/ingest-client/ingest-client";
 import {ErrorObject} from "ajv";
 import SchemaValidator from "./schema-validator";
 import ErrorReport from "../model/error-report";
-import {NoDescribedBy, SchemaRetrievalError} from "./ingest-validation-exceptions";
+import {NoDescribedBy, SchemaRetrievalError, NoFileMetadata} from "./ingest-validation-exceptions";
 import R from "ramda";
 import ErrorType from "../model/error-type";
 import request from "request-promise";
@@ -37,16 +37,16 @@ class IngestValidator {
 
     validate(document: any, documentType: string) : Promise<ValidationReport> {
         const documentContent = document["content"];
-        if(! documentContent["describedBy"]) {
+        let schemaUri = documentContent && documentContent["describedBy"] ? documentContent["describedBy"] : document["described_by"];
+
+        if (!schemaUri) {
             return Promise.reject(new NoDescribedBy("describedBy is a required field"));
         } else {
-            let schemaUri = documentContent["describedBy"];
-
             return this.getSchema(schemaUri)
                 .then(schema => {return IngestValidator.insertSchemaId(schema)})
                 .then(schema => {
                     if (this.shouldUseBiovalidator(schema)) {
-                        return this.validateWithBiovalidatorAndGenerateReport(schema, documentContent);
+                        return this.validateWithBiovalidatorAndGenerateReport(schema, document);
                     } else {
                         return this.schemaValidator.validateSingleSchema(schema, documentContent)
                             .then(valErrors => {return IngestValidator.parseValidationErrors(valErrors)})
@@ -124,33 +124,66 @@ class IngestValidator {
             });
     }
 
-    validateWithBiovalidator(schema: any, documentContent: any): Promise<any> {
-        const payload = {
-            schema: {
-                properties: schema['properties']
-            },
-            data: {
-                content: documentContent
-            },
-        };
+    validateWithBiovalidator(schema: any, document: any): Promise<any> {
+        try {
+            const requiredFields = ['schema_type', 'schema_version', 'submissionDate', 'user', 'updateDate',
+                'lastModifiedUser', 'uuid', 'content'];
+            this.ensureRequiredFields(document, requiredFields);
 
-        return new Promise<any>((resolve, reject) => {
-            const options = {
-                method: "POST",
-                url: `${this.baseUrl}${this.endpoint}`, // Constructing the full URL
-                body: payload,
-                json: true,
+            const payload = {
+                schema: schema,
+                data: {
+                    described_by: document.described_by,
+                    schema_type: document.schema_type,
+                    schema_version: document.schema_version,
+                    submitted_at: document.submissionDate,
+                    submitted_by: document.user,
+                    updated_at: document.updateDate,
+                    updated_by: document.lastModifiedUser,
+                    uuid: document.uuid.uuid,
+                    content: document.content
+                },
             };
 
-            request(options)
-                .then(resp => resolve(resp))
-                .catch(err => reject(err));
+            return new Promise<any>((resolve, reject) => {
+                const options = {
+                    method: "POST",
+                    url: `${this.baseUrl}${this.endpoint}`,
+                    body: payload,
+                    json: true,
+                };
+
+                request(options)
+                    .then(resp => resolve(resp))
+                    .catch(err => reject(err));
+            });
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    ensureRequiredFields(document: any, fields: string[]) {
+        const missingFields: string[] = [];
+
+        fields.forEach(field => {
+            if (!this.getNestedProperty(document, field.split('.'))) {
+                missingFields.push(field);
+            }
         });
+
+        if (missingFields.length > 0) {
+            throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+        }
+    }
+
+    getNestedProperty(object: any, pathArray: string[]): any {
+        return pathArray.reduce((obj, key) => {
+            return (obj && obj[key] !== undefined) ? obj[key] : undefined;
+        }, object);
     }
 
     static parseBiovalidatorErrors(errors: any[]): ErrorReport[] {
         return errors.map(err => {
-            // Combine all errors into a single message for simplicity
             const message = err.errors.join("; ");
             return new ErrorReport(ErrorType.MetadataError, message, err.dataPath);
         });
