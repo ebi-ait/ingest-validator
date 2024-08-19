@@ -50,7 +50,7 @@ class GraphRestriction implements CustomAjvKeyword {
     static _generateKeywordFunction() : SchemaValidateFunction {
 
         const olsConnectionConfig: any = config.get("OLS_API.connection");
-        const olsSearchUrl = olsConnectionConfig["scheme"] + "://" + olsConnectionConfig["host"] + ":" + olsConnectionConfig["port"] + "/api/search?q="
+        const olsSearchUrl: string = olsConnectionConfig["url"] + "/api/search?q=";
         const cachedOlsResponses: {[key: string]: Promise<any>} = {};
         const curieExpansion = new CurieExpansion();
 

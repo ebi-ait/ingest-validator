@@ -31,8 +31,7 @@
   },
   "OLS_API" : {
     "connection" : {
-      "host" : "OLS_HOST",
-      "port" : "OLS_PORT"
+      "url" : "OLS_URL"
     }
   },
   "FILE_VALIDATION_IMAGES" : {

@@ -3,7 +3,7 @@ import request from "request-promise";
 import Promise from "bluebird";
 
 const olsConnectionConfig :any = config.get("OLS_API.connection");
-const olsSearchUrl: string = olsConnectionConfig["scheme"] + "://" + olsConnectionConfig["host"] + ":" + olsConnectionConfig["port"] + "/api/search?q=";
+const olsSearchUrl: string = olsConnectionConfig["url"] + "/api/search?q=";
 
 class CurieExpansion {
     cachedOlsCurieResponses: any = {};

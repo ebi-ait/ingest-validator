@@ -45,9 +45,7 @@
   },
   "OLS_API" : {
     "connection" : {
-      "scheme": "http",
-      "host" : "ontology.dev.data.humancellatlas.org",
-      "port" : 80
+      "url": "https://wwwdev.ebi.ac.uk/ols4"
     }
   },
   "FILE_VALIDATION_IMAGES" : {
