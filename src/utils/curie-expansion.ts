@@ -45,7 +45,7 @@ class CurieExpansion {
                         resolve(jsonBody.response.docs[0].iri);
                     }
                     else {
-                        reject("Could not retrieve IRI for " + term);
+                        reject(`Could not retrieve IRI for ${term}. OLS URL: ${url}`);
                     }
                 }).catch(err => {
                 reject(err)
