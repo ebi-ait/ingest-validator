@@ -1,4 +1,5 @@
 import config from "config";
+import _ from "lodash";
 import request from "request-promise";
 import Promise from "bluebird";
 import * as QueryString from "querystring";
@@ -48,14 +49,19 @@ class CurieExpansion {
                 .then((resp: any) => {
                     this.cachedOlsCurieResponses[url] = resp;
                     let jsonBody = resp;
-                    if (jsonBody.response.numFound === 1) {
-                        resolve(jsonBody.response.docs[0].iri);
+                    const groupedByOboId = _.groupBy(jsonBody.response.docs, (obj) => obj.obo_id.toLowerCase());
+
+                    // Extract the `iri` of the first object in each group
+                    const docs = _.map(groupedByOboId, (group) => group[0]);
+                    if (docs.length === 1) {
+                        resolve(docs[0].iri);
                     } else {
-                        reject(`Could not retrieve IRI for ${term}. OLS URL: ${url}. Num of documents returned: ${jsonBody.response.numFound}`);
+                        reject(`Could not retrieve IRI for ${term}. OLS URL: ${url}. Num of documents returned: ${jsonBody.response.numFound}, Num of unique obo_is: ${docs.length}`);
                     }
-                }).catch(err => {
-                reject(err)
-            });
+                })
+                .catch(err => {
+                    reject(err)
+                });
         });
     }
 }
