@@ -45,7 +45,7 @@
   },
   "OLS_API" : {
     "connection" : {
-      "url": "https://www.ebi.ac.uk/ols4"
+      "url": "https://wwwdev.ebi.ac.uk/ols4"
     }
   },
   "FILE_VALIDATION_IMAGES" : {
