@@ -79,8 +79,12 @@ class GraphRestriction implements CustomAjvKeyword {
 
         const findChildTerm = (schema: any, data: any, parentSchema:any, dataPath:any) => {
             return new Promise((resolve, reject) => {
+                console.log(`schema: ${JSON.stringify(schema)}`);
+
                 let parentTerms = schema.classes;
+                console.log(`parentTerms: ${parentTerms}`);
                 const ontologyIds = schema.ontologies;
+                console.log(`ontologyIds: ${ontologyIds}`);
                 let errors: ErrorObject[]  = [];
 
                 if(parentTerms && ontologyIds) {
@@ -89,9 +93,10 @@ class GraphRestriction implements CustomAjvKeyword {
                     }
                     else {
                         callCurieExpansion(parentTerms).then((iris) => {
-
                             const parentTerm = iris.join(",");
+                            console.log(`parentTerm: ${parentTerm}`);
                             const ontologyId = ontologyIds.join(",").replace(/obo:/g, "");
+                            console.log(`ontologyId: ${ontologyId}`);
 
                             const termUri = encodeURIComponent(data);
                             const url = olsSearchUrl + termUri
