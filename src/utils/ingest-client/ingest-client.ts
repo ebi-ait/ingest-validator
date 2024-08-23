@@ -34,7 +34,7 @@ class IngestClient extends Client {
         const ingestUrl = `${connectionConfig.scheme}://${connectionConfig.host}:${connectionConfig.port}`;
         super(ingestUrl);
     }
-    
+
     retrieve(entityUrl: string) : Promise<any>{
         return new Promise((resolve, reject) => {
             const options = {
@@ -150,7 +150,7 @@ class IngestClient extends Client {
 
     postValidationReport(entityUrl: string, validationReport: ValidationReport) : Promise<any>{
         if(! validationReport || ! validationReport.validationState) {
-            console.info("Broken validation report");
+            console.info(`Broken validation report for document ${entityUrl}`);
         }
 
         if(validationReport.validationState.toUpperCase() === 'VALID') {
