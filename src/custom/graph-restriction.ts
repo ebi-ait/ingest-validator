@@ -122,7 +122,7 @@ class GraphRestriction implements CustomAjvKeyword {
                                 }
                                 reject(new ajv.ValidationError(errors));
                             }).catch(err => {
-                                errors.push(generateErrorObject(`An error occurred on ontology validation request: [${err.toLocaleString()}]`, dataPath));
+                                errors.push(generateErrorObject(`An error occurred on ontology validation request for schema id ${schema['$id']}, term [${data}], ols url: ${url}: [${err.toLocaleString()}]`, dataPath));
                                 reject(new ajv.ValidationError(errors));
                             });
                         }).catch(err => {
