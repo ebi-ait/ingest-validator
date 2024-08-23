@@ -6,7 +6,7 @@
   "repository": "https://github.com/ebi-ait/ingest-validator.git",
   "scripts": {
     "start": "tsc && node dist/app.js",
-    "test": "jest && npm run cucumber",
+    "test": "jest",
     "cucumber": "tsc && cucumber-js --format @cucumber/pretty-formatter",
     "test-watch": "nodemon --exec \"npm test\""
   },
