@@ -5,6 +5,7 @@ import config from "config";
 import request from "request-promise";
 import Promise from "bluebird";
 import CurieExpansion from "../utils/curie-expansion";
+import QueryString from "querystring";
 
 class GraphRestriction implements CustomAjvKeyword {
     keywordName: string;
@@ -51,7 +52,7 @@ class GraphRestriction implements CustomAjvKeyword {
     static _generateKeywordFunction(): SchemaValidateFunction {
 
         const olsConnectionConfig: any = config.get("OLS_API.connection");
-        const olsSearchUrl: string = olsConnectionConfig["url"] + "/api/search?q=";
+        const olsSearchUrl: string = olsConnectionConfig["url"] + "/api/search";
         const cachedOlsResponses: { [key: string]: Promise<any> } = {};
         const curieExpansion = new CurieExpansion();
 
@@ -98,10 +99,17 @@ class GraphRestriction implements CustomAjvKeyword {
                                 const ontologyId = ontologyIds.join(",").replace(/obo:/g, "");
                                 console.log(`ontologyId: ${ontologyId}`);
 
-                                const termUri = encodeURIComponent(data);
-                                const url = olsSearchUrl + termUri
-                                    + "&exact=true&groupField=true&allChildrenOf=" + encodeURIComponent(parentTerm)
-                                    + "&ontology=" + ontologyId + "&queryFields=obo_id";
+                                const olsQueryString = QueryString.stringify(
+                                    {
+                                        q: data,
+                                        exact: true,
+                                        groupField: true,
+                                        allChildrenOf: parentTerm,
+                                        ontology: ontologyId,
+                                        queryFields:'obo_id'
+                                    }
+                                )
+                                const url = olsSearchUrl + '?' + olsQueryString;
                                 console.log(`url: ${url}`);
                                 let olsResponsePromise = null;
                                 if (cachedOlsResponses[url]) {
