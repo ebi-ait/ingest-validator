@@ -4,10 +4,11 @@ FROM quay.io/ebi-ait/ingest-base-images:node_carbon
 RUN mkdir /app
 WORKDIR /app
 
+COPY package*.json ./
+RUN npm install
+
 ADD src ./src
 ADD config ./config
-COPY package*.json ./
 COPY tsconfig.json ./
 
-RUN npm install
 CMD ["npm", "start"]
