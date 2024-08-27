@@ -1,5 +1,5 @@
 const fs = require("fs");
-const validator = require("../src/validation/validator");
+const validator = require("@/validation/validator");
 
 test("HCA ref schema, species and restriction schema test WITHOUT errors", () => {
     let hcaSchema = fs.readFileSync("examples/schemas/draft-04/donor_organism.json");

@@ -1,14 +1,15 @@
+import * as ajv from "ajv";
 import {Ajv, ErrorObject, KeywordDefinition, SchemaValidateFunction} from "ajv";
 import CustomAjvKeyword from "./custom-ajv-keyword";
 import config from "config";
 import request from "request-promise";
-import * as ajv from "ajv";
 import Promise from "bluebird";
 import CurieExpansion from "../utils/curie-expansion";
 
 class GraphRestriction implements CustomAjvKeyword {
     keywordName: string;
-    constructor(keywordName?: string){
+
+    constructor(keywordName?: string) {
         this.keywordName = keywordName ? keywordName : "graph_restriction";
     }
 
@@ -24,7 +25,7 @@ class GraphRestriction implements CustomAjvKeyword {
         return GraphRestriction._configure(ajv, this.keywordName);
     }
 
-    static _configure(ajv: Ajv, keywordName: string) : Ajv {
+    static _configure(ajv: Ajv, keywordName: string): Ajv {
         const keywordDefinition: KeywordDefinition = {
             async: GraphRestriction._isAsync(),
             type: "string",
@@ -35,7 +36,7 @@ class GraphRestriction implements CustomAjvKeyword {
         return ajv.addKeyword(keywordName, keywordDefinition);
     }
 
-    keywordFunction() : SchemaValidateFunction {
+    keywordFunction(): SchemaValidateFunction {
         return GraphRestriction._generateKeywordFunction();
     }
 
@@ -47,19 +48,18 @@ class GraphRestriction implements CustomAjvKeyword {
         return true;
     }
 
-    static _generateKeywordFunction() : SchemaValidateFunction {
+    static _generateKeywordFunction(): SchemaValidateFunction {
 
         const olsConnectionConfig: any = config.get("OLS_API.connection");
         const olsSearchUrl: string = olsConnectionConfig["url"] + "/api/search?q=";
-        const cachedOlsResponses: {[key: string]: Promise<any>} = {};
+        const cachedOlsResponses: { [key: string]: Promise<any> } = {};
         const curieExpansion = new CurieExpansion();
 
         const callCurieExpansion = (terms: string[]) => {
             let expanded = terms.map((t) => {
-                if (CurieExpansion.isCurie(t)){
+                if (CurieExpansion.isCurie(t)) {
                     return curieExpansion.expandCurie(t);
-                }
-                else {
+                } else {
                     return t
                 }
             });
@@ -77,7 +77,7 @@ class GraphRestriction implements CustomAjvKeyword {
             };
         };
 
-        const findChildTerm = (schema: any, data: any, parentSchema:any, dataPath:any) => {
+        const findChildTerm = (schema: any, data: any, parentSchema: any, dataPath: any) => {
             return new Promise((resolve, reject) => {
                 console.log(`schema: ${JSON.stringify(schema)}`);
 
@@ -85,58 +85,59 @@ class GraphRestriction implements CustomAjvKeyword {
                 console.log(`parentTerms: ${parentTerms}`);
                 const ontologyIds = schema.ontologies;
                 console.log(`ontologyIds: ${ontologyIds}`);
-                let errors: ErrorObject[]  = [];
+                let errors: ErrorObject[] = [];
 
-                if(parentTerms && ontologyIds) {
-                    if(schema.include_self === true && parentTerms.includes(data)){
+                if (parentTerms && ontologyIds) {
+                    if (schema.include_self === true && parentTerms.includes(data)) {
                         resolve(data);
-                    }
-                    else {
-                        callCurieExpansion(parentTerms).then((iris) => {
-                            const parentTerm = iris.join(",");
-                            console.log(`parentTerm: ${parentTerm}`);
-                            const ontologyId = ontologyIds.join(",").replace(/obo:/g, "");
-                            console.log(`ontologyId: ${ontologyId}`);
+                    } else {
+                        callCurieExpansion(parentTerms)
+                            .then((iris) => {
+                                const parentTerm = iris.join(",");
+                                console.log(`parentTerm: ${parentTerm}`);
+                                const ontologyId = ontologyIds.join(",").replace(/obo:/g, "");
+                                console.log(`ontologyId: ${ontologyId}`);
 
-                            const termUri = encodeURIComponent(data);
-                            const url = olsSearchUrl + termUri
-                                + "&exact=true&groupField=true&allChildrenOf=" + encodeURIComponent(parentTerm)
-                                + "&ontology=" + ontologyId + "&queryFields=obo_id";
-
-                            let olsResponsePromise = null;
-                            if(cachedOlsResponses[url]) {
-                                olsResponsePromise = Promise.resolve(cachedOlsResponses[url]);
-                            }
-                            else {
-                                olsResponsePromise = request({
-                                    method: "GET",
-                                    url: url,
-                                    json: true
-                                });
-                            }
-
-                            olsResponsePromise.then((resp: any) => {
-                                cachedOlsResponses[url] = resp;
-                                let jsonBody = resp;
-
-                                if (jsonBody.response.numFound === 1) {
-                                } else if (jsonBody.response.numFound === 0) {
-                                    errors.push(generateErrorObject(`Provided term is not child of [${parentTerm}]`, dataPath));
+                                const termUri = encodeURIComponent(data);
+                                const url = olsSearchUrl + termUri
+                                    + "&exact=true&groupField=true&allChildrenOf=" + encodeURIComponent(parentTerm)
+                                    + "&ontology=" + ontologyId + "&queryFields=obo_id";
+                                console.log(`url: ${url}`);
+                                let olsResponsePromise = null;
+                                if (cachedOlsResponses[url]) {
+                                    olsResponsePromise = Promise.resolve(cachedOlsResponses[url]);
                                 } else {
-                                    errors.push(generateErrorObject("Something went wrong while validating term, try again.", dataPath));
+                                    olsResponsePromise = request({
+                                        method: "GET",
+                                        url: url,
+                                        json: true
+                                    });
                                 }
-                                reject(new ajv.ValidationError(errors));
-                            }).catch(err => {
-                                errors.push(generateErrorObject(`An error occurred on ontology validation request for schema id ${schema['$id']}, term [${data}], ols url: ${url}: [${err.toLocaleString()}]`, dataPath));
+
+                                olsResponsePromise
+                                    .then((resp: any) => {
+                                        cachedOlsResponses[url] = resp;
+                                        let jsonBody = resp;
+
+                                        if (jsonBody.response.numFound === 1) {
+                                        } else if (jsonBody.response.numFound === 0) {
+                                            errors.push(generateErrorObject(`Provided term is not child of [${parentTerm}]`, dataPath));
+                                        } else {
+                                            errors.push(generateErrorObject("Something went wrong while validating term, try again.", dataPath));
+                                        }
+                                        reject(new ajv.ValidationError(errors));
+                                    })
+                                    .catch(err => {
+                                        errors.push(generateErrorObject(`An error occurred on ontology validation request for schema id ${schema['$id']}, term [${data}], ols url: ${url}: [${err.toLocaleString()}]`, dataPath));
+                                        reject(new ajv.ValidationError(errors));
+                                    });
+                            })
+                            .catch(err => {
+                                errors.push(generateErrorObject(err, dataPath));
                                 reject(new ajv.ValidationError(errors));
                             });
-                        }).catch(err => {
-                            errors.push(generateErrorObject(err, dataPath));
-                            reject(new ajv.ValidationError(errors));
-                        });
                     }
-                }
-                else {
+                } else {
                     errors.push(generateErrorObject("Missing required variable in schema graph_restriction, required properties are: parentTerm and ontologyId.", dataPath));
                     reject(new ajv.ValidationError(errors));
                 }

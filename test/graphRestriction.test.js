@@ -1,39 +1,46 @@
 const fs = require("fs");
-const runValidation = require("../src/validation/validator");
+const GraphRestriction = require("@/custom/graph-restriction").default;
+const SchemaValidator = require("@/validation/schema-validator").default;
 
-test(" -> graphRestriction Schema", () => {
-    let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
-    let jsonSchema = JSON.parse(inputSchema);
+describe('SchemaValidator', () => {
+    const ontologyValidatorKeyword = new GraphRestriction("graph_restriction");
+    const schemaValidator = new SchemaValidator([ontologyValidatorKeyword]);
 
-    let inputObj = fs.readFileSync("examples/objects/graphRestriction_pass.json");
-    let jsonObj = JSON.parse(inputObj);
+    test(" -> graphRestriction Schema", () => {
+        let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
+        let jsonSchema = JSON.parse(inputSchema);
 
-    return runValidation.validateSingleSchema(jsonSchema, jsonObj).then( (data) => {
-        expect(data).toBeDefined();
+        let inputObj = fs.readFileSync("examples/objects/graphRestriction_pass.json");
+        let jsonObj = JSON.parse(inputObj);
+
+        return schemaValidator.validateSingleSchema(jsonSchema, jsonObj)
+            .then((data) => {
+                expect(data).toBeDefined();
+            });
     });
-});
 
-test(" -> graphRestriction Schema", () => {
-    let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
-    let jsonSchema = JSON.parse(inputSchema);
+    test(" -> graphRestriction Schema", () => {
+        let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
+        let jsonSchema = JSON.parse(inputSchema);
 
-    let inputObj = fs.readFileSync("examples/objects/graphRestriction_normal.json");
-    let jsonObj = JSON.parse(inputObj);
+        let inputObj = fs.readFileSync("examples/objects/graphRestriction_normal.json");
+        let jsonObj = JSON.parse(inputObj);
 
-    return runValidation.validateSingleSchema(jsonSchema, jsonObj).then( (data) => {
-        expect(data).toBeDefined();
+        return schemaValidator.validateSingleSchema(jsonSchema, jsonObj).then((data) => {
+            expect(data).toBeDefined();
+        });
     });
-});
 
-test(" -> graphRestriction Schema", () => {
-    let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
-    let jsonSchema = JSON.parse(inputSchema);
+    test(" -> graphRestriction Schema", () => {
+        let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
+        let jsonSchema = JSON.parse(inputSchema);
 
-    let inputObj = fs.readFileSync("examples/objects/graphRestriction_fail.json");
-    let jsonObj = JSON.parse(inputObj);
+        let inputObj = fs.readFileSync("examples/objects/graphRestriction_fail.json");
+        let jsonObj = JSON.parse(inputObj);
 
-    return runValidation.validateSingleSchema(jsonSchema, jsonObj).then( (data) => {
-        expect(data).toBeDefined();
-        expect(data[0]).toBeDefined();
+        return schemaValidator.validateSingleSchema(jsonSchema, jsonObj).then((data) => {
+            expect(data).toBeDefined();
+            expect(data[0]).toBeDefined();
+        });
     });
 });

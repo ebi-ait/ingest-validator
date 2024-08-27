@@ -22,7 +22,9 @@ class FileValidationListener {
     }
 
     start(){
+        console.log('starting file validation listener...');
         this.listener.start();
+        console.log('started file validation listener...');
     }
 }
 

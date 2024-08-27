@@ -21,7 +21,9 @@ class DocumentUpdateListener {
     }
 
     start() : void {
+        console.log('starting document update listener...');
         this.listener.start();
+        console.log('started document update listener...');
     }
 }
 

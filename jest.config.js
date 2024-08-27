@@ -74,8 +74,15 @@ module.exports = {
         "json"
     ],
 
-    // A map from regular expressions to module names that allow to stub out resources with a single module
-    // moduleNameMapper: {},
+    /**
+     * A map from regular expressions to module names that allow to stub out resources with a single module
+     * it enables js tests to us require statements such as the following:
+     *   const SchemaValidator = require("@/validation/schema-validator").default;
+     *
+     */
+    moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+    },
 
     // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
     // modulePathIgnorePatterns: [],
@@ -138,7 +145,9 @@ module.exports = {
 
     // The glob patterns Jest uses to detect test files
     testMatch: [
-        "**/*spec.+(ts|tsx)"
+        "**/*spec.+(ts|tsx)",
+        "**/*test\.js",
+
     ],
 
     // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
