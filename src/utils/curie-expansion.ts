@@ -48,17 +48,19 @@ class CurieExpansion {
                 .then((resp: any) => {
                     this.cachedOlsCurieResponses[url] = resp;
                     let jsonBody = resp;
-                    const groupedByOboId = jsonBody.response.docs.reduce((acc:any, doc:any) => {
-                        const groupKey = doc['obo_id'].toLowerCase();
-                        if (!acc[groupKey]) {
-                            acc[groupKey] = [];
-                        }
-                        acc[groupKey].push(doc);
-                        return acc;
-                    }, {});
+                    const groupedByOboId = jsonBody.response.docs
+                        .reduce((acc: any, doc: any) => {
+                            const groupKey = doc['obo_id'].toLowerCase();
+                            if (!acc[groupKey]) {
+                                acc[groupKey] = [];
+                            }
+                            acc[groupKey].push(doc);
+                            return acc;
+                        }, {});
 
                     // Extract the `iri` of the first object in each group
-                    const docs = Object.entries(groupedByOboId).map((group:any) => group[0]);
+                    const docs = Object.values(groupedByOboId)
+                        .map((group: any) => group[0]);
                     if (docs.length === 1) {
                         resolve(docs[0].iri);
                     } else {

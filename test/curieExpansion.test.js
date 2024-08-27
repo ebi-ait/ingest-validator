@@ -7,7 +7,7 @@ describe('curie expansion', () => {
         const isCurie = CurieExpansion.isCurie(curie);
         expect(isCurie).toBe(true);
     });
-    
+
     test('single result from OLS', () => {
         curieExpansion.expandCurie(curie)
             .then((uri) => {
@@ -19,6 +19,13 @@ describe('curie expansion', () => {
         curieExpansion.expandCurie('HANCESTRO:0004')
             .then((uri) => {
                 expect(uri).toBe("http://purl.obolibrary.org/obo/HANCESTRO_0004");
+            });
+    });
+
+    test('UO:0000001', () => {
+        curieExpansion.expandCurie('UO:0000001')
+            .then((uri) => {
+                expect(uri).toBe("http://purl.obolibrary.org/obo/UO_0000001");
             });
     });
 

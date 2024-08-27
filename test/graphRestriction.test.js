@@ -2,11 +2,11 @@ const fs = require("fs");
 const GraphRestriction = require("@/custom/graph-restriction").default;
 const SchemaValidator = require("@/validation/schema-validator").default;
 
-describe('SchemaValidator', () => {
+describe('graphRestriction', () => {
     const ontologyValidatorKeyword = new GraphRestriction("graph_restriction");
     const schemaValidator = new SchemaValidator([ontologyValidatorKeyword]);
 
-    test(" -> graphRestriction Schema", () => {
+    test("pass", () => {
         let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
         let jsonSchema = JSON.parse(inputSchema);
 
@@ -19,7 +19,7 @@ describe('SchemaValidator', () => {
             });
     });
 
-    test(" -> graphRestriction Schema", () => {
+    test("normal", () => {
         let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
         let jsonSchema = JSON.parse(inputSchema);
 
@@ -31,7 +31,7 @@ describe('SchemaValidator', () => {
         });
     });
 
-    test(" -> graphRestriction Schema", () => {
+    test("fail", () => {
         let inputSchema = fs.readFileSync("examples/schemas/graphRestriction-schema.json");
         let jsonSchema = JSON.parse(inputSchema);
 
