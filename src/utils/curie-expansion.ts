@@ -48,14 +48,26 @@ class CurieExpansion {
                 .then((resp: any) => {
                     this.cachedOlsCurieResponses[url] = resp;
                     let jsonBody = resp;
-                    if (jsonBody.response.numFound === 1) {
-                        resolve(jsonBody.response.docs[0].iri);
+                    const groupedByOboId = jsonBody.response.docs.reduce((acc:any, doc:any) => {
+                        const groupKey = doc['obo_id'].toLowerCase();
+                        if (!acc[groupKey]) {
+                            acc[groupKey] = [];
+                        }
+                        acc[groupKey].push(doc);
+                        return acc;
+                    }, {});
+
+                    // Extract the `iri` of the first object in each group
+                    const docs = Object.entries(groupedByOboId).map((group:any) => group[0]);
+                    if (docs.length === 1) {
+                        resolve(docs[0].iri);
                     } else {
-                        reject(`Could not retrieve IRI for ${term}. OLS URL: ${url}. Num of documents returned: ${jsonBody.response.numFound}`);
+                        reject(`Could not retrieve IRI for ${term}. OLS URL: ${url}. Num of documents returned: ${jsonBody.response.numFound}, Num of unique obo_is: ${docs.length}`);
                     }
-                }).catch(err => {
-                reject(err)
-            });
+                })
+                .catch(err => {
+                    reject(err)
+                });
         });
     }
 }
