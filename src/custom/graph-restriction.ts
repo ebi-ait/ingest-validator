@@ -80,12 +80,12 @@ class GraphRestriction implements CustomAjvKeyword {
 
         const findChildTerm = (schema: any, data: any, parentSchema: any, dataPath: any) => {
             return new Promise((resolve, reject) => {
-                console.log(`schema: ${JSON.stringify(schema)}`);
+                console.debug(`schema: ${JSON.stringify(schema)}`);
 
                 let parentTerms = schema.classes;
-                console.log(`parentTerms: ${parentTerms}`);
+                console.debug(`parentTerms: ${parentTerms}`);
                 const ontologyIds = schema.ontologies;
-                console.log(`ontologyIds: ${ontologyIds}`);
+                console.debug(`ontologyIds: ${ontologyIds}`);
                 let errors: ErrorObject[] = [];
 
                 if (parentTerms && ontologyIds) {
@@ -95,9 +95,9 @@ class GraphRestriction implements CustomAjvKeyword {
                         callCurieExpansion(parentTerms)
                             .then((iris) => {
                                 const parentTerm = iris.join(",");
-                                console.log(`parentTerm: ${parentTerm}`);
+                                console.debug(`parentTerm: ${parentTerm}`);
                                 const ontologyId = ontologyIds.join(",").replace(/obo:/g, "");
-                                console.log(`ontologyId: ${ontologyId}`);
+                                console.debug(`ontologyId: ${ontologyId}`);
 
                                 const olsQueryString = QueryString.stringify(
                                     {
@@ -110,7 +110,7 @@ class GraphRestriction implements CustomAjvKeyword {
                                     }
                                 )
                                 const url = olsSearchUrl + '?' + olsQueryString;
-                                console.log(`url: ${url}`);
+                                console.debug(`url: ${url}`);
                                 let olsResponsePromise = null;
                                 if (cachedOlsResponses[url]) {
                                     olsResponsePromise = Promise.resolve(cachedOlsResponses[url]);
